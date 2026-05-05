@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SwimStart Trainer Pro</title>
+    
+    <script>
+        window.addEventListener('error', function(event) {
+            document.body.innerHTML = '<div style="background:#111; color:#ff3b30; padding:30px; height:100vh; font-family:sans-serif;"><h3>⚠️ พบปัญหาการทำงานขั้นวิกฤต:</h3><p>' + event.message + '</p><p style="color:#888; font-size:12px; margin-top:20px;">(แคปหน้าจอนี้ส่งให้โปรแกรมเมอร์ดูได้เลยครับ)</p></div>';
+        });
+    </script>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SwimStart">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- ฟอนต์ Bebas Neue และฟอนต์อื่นๆ -->
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@400&family=Montserrat:wght@400;500;700&family=Science+Gothic:wdth,wght@125,300;125,400;125,500;125,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root { --neon: #C8FF00; --bg-dark: #060606; }
+        body { background-color: var(--bg-dark); color: white; -webkit-user-select: none; user-select: none; overflow: hidden; touch-action: manipulation; }
+        .text-neon { color: var(--neon); }
+        .bg-neon { background-color: var(--neon); }
+        .border-neon { border-color: var(--neon); }
+        .font-sg-light { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 300; }
+        .font-sg-regular { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 400; }
+        .font-sg-medium { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 500; }
+        .font-sg-bold { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 700; }
+        .font-sg-expanded-medium { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 500; }
+        .font-mont-regular { font-family: 'Montserrat', sans-serif; font-weight: 400; }
+        .font-mont-medium { font-family: 'Montserrat', sans-serif; font-weight: 500; }
+        .font-mont-bold { font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        .font-kanit-regular { font-family: 'Kanit', sans-serif; font-weight: 400; }
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .mode-card { border: 2px solid #333; border-radius: 12px; background: transparent; transition: all 0.2s; }
+        .mode-card.active { border-color: var(--neon); background-color: rgba(200, 255, 0, 0.03); box-shadow: inset 0 0 20px rgba(200, 255, 0, 0.05); }
+        .btn-press:active { transform: scale(0.95); transition: 0.05s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes neonBreathing {
+            0%, 100% { box-shadow: 0 0 5px rgba(200, 255, 0, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(200, 255, 0, 0.8), 0 0 25px rgba(200, 255, 0, 0.4); }
+        }
+        .animate-breathing { animation: neonBreathing 2.5s infinite ease-in-out; }
+
+        @keyframes redBreathing {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 59, 48, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(255, 59, 48, 0.8), 0 0 25px rgba(255, 59, 48, 0.4); }
+        }
+        .animate-breathing-red { animation: redBreathing 2.5s infinite ease-in-out; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzIEvJM4dzrrBVd1_i5c4fkF4c5NrXJ3s",
+            authDomain: "swimstart-trainer-e5caa.firebaseapp.com",
+            projectId: "swimstart-trainer-e5caa",
+            storageBucket: "swimstart-trainer-e5caa.firebasestorage.app",
+            messagingSenderId: "377340923934",
+            appId: "1:377340923934:web:933502f144786ce0c51e0f",
+            measurementId: "G-KSTLYS4NHB"
+        };
+        
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch(err) {
+            throw new Error("เกิดปัญหาการเชื่อมต่อฐานข้อมูล Google Firebase: " + err.message);
+        }
+
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        const db = firebase.firestore();
+
+        const { useState, useRef, useEffect } = React;
+
+        const EVENTS = [
+            { id: 'fs25', name: 'ฟรีสไตล์ 25 เมตร', style: 'freestyle' },
+            { id: 'fs50', name: 'ฟรีสไตล์ 50 เมตร', style: 'freestyle' },
+            { id: 'br25', name: 'กบ 25 เมตร', style: 'freestyle' },
+            { id: 'br50', name: 'กบ 50 เมตร', style: 'freestyle' },
+            { id: 'bu25', name: 'ผีเสื้อ 25 เมตร', style: 'freestyle' },
+            { id: 'bu50', name: 'ผีเสื้อ 50 เมตร', style: 'freestyle' },
+            { id: 'ba25', name: 'กรรเชียง 25 เมตร', style: 'backstroke' },
+            { id: 'ba50', name: 'กรรเชียง 50 เมตร', style: 'backstroke' },
+            { id: 'im25', name: 'เดี่ยวผสม 25 เมตร', style: 'freestyle' },
+            { id: 'im50', name: 'เดี่ยวผสม 50 เมตร', style: 'freestyle' },
+            { id: 'relay_fs', name: 'ผลัดฟรีสไตล์', style: 'freestyle' },
+            { id: 'relay_med', name: 'ผลัดผสม', style: 'backstroke' }
+        ];
+        const FALLBACK_NAMES = { 1: 'เอ', 2: 'บี', 3: 'ซี', 4: 'ดี', 5: 'อี' };
+
+        let audioCtx = null;
+        const getAudioContext = () => {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        };
+
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [isPro, setIsPro] = useState(false); 
+            const [authLoading, setAuthLoading] = useState(true);
+
+            const [isStandalone, setIsStandalone] = useState(() => {
+                if (typeof window !== 'undefined') {
+                    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+                }
+                return false;
+            });
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [isIOS, setIsIOS] = useState(false);
+
+            const [screen, setScreen] = useState('menu');
+            const [selectedMode, setSelectedMode] = useState(null); 
+            const [isStopwatchOn, setIsStopwatchOn] = useState(() => { const saved = localStorage.getItem('isStopwatchOn'); return saved !== null ? JSON.parse(saved) : false; });
+            const [isUiMuted, setIsUiMuted] = useState(() => { const saved = localStorage.getItem('isUiMuted'); return saved !== null ? JSON.parse(saved) : false; });
+            const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
+            const [isNewSession, setIsNewSession] = useState(false);
+            const [finalTime, setFinalTime] = useState(0);
+            const [stopwatchHistory, setStopwatchHistory] = useState([]);
+            const [historyMode, setHistoryMode] = useState('stop');
+            
+            const [isCooldown, setIsCooldown] = useState(false);
+
+            const raceStartTime = useRef(0);
+            const [readyStyle, setReadyStyle] = useState('freestyle');
+            const [raceEvent, setRaceEvent] = useState(EVENTS[0].id);
+            const [lanes, setLanes] = useState({ 1: '', 2: '', 3: '', 4: '', 5: '' });
+            const [savedNames, setSavedNames] = useState([]);
+            const [activeLaneModal, setActiveLaneModal] = useState(null); 
+            const [tempInputName, setTempInputName] = useState('');
+            const [step, setStep] = useState(0); 
+            const [statusText, setStatusText] = useState('');
+            const [subText, setSubText] = useState('');
+            const [subTextTh, setSubTextTh] = useState(''); 
+            
+            const [popupType, setPopupType] = useState(null); 
+            const [copyText, setCopyText] = useState('COPY URL'); 
+            const [copyBuyText, setCopyBuyText] = useState('COPY ข้อความสั่งซื้อ');
+            
+            const cancelRef = useRef(false);
+            const timeTextRef = useRef(null);
+            const ringCircleRef = useRef(null);
+            const CIRCUMFERENCE = 2 * Math.PI * 140;
+
+            useEffect(() => {
+                const ua = window.navigator.userAgent.toLowerCase();
+                setIsIOS(/iphone|ipad|ipod/.test(ua));
+
+                const handleBeforeInstallPrompt = (e) => {
+                    e.preventDefault(); 
+                    setDeferredPrompt(e); 
+                    setIsStandalone(false); 
+                };
+
+                const handleAppInstalled = () => {
+                    setIsStandalone(true); 
+                };
+
+                const mql = window.matchMedia('(display-mode: standalone)');
+                const handleMatchChange = (e) => setIsStandalone(e.matches || window.navigator.standalone === true);
+
+                window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+                window.addEventListener('appinstalled', handleAppInstalled);
+                if (mql.addEventListener) mql.addEventListener('change', handleMatchChange);
+
+                return () => {
+                    window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+                    window.removeEventListener('appinstalled', handleAppInstalled);
+                    if (mql.removeEventListener) mql.removeEventListener('change', handleMatchChange);
+                };
+            }, []);
+
+            useEffect(() => {
+                const localExpire = localStorage.getItem('proExpireDate');
+                if (localExpire && new Date() <= new Date(localExpire)) {
+                    setIsPro(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+                    if (currentUser) {
+                        setUser(currentUser);
+                        db.collection('users').doc(currentUser.email).get().then(doc => {
+                            if (doc.exists) {
+                                const expireDateStr = doc.data().expireDate; 
+                                const expireDate = new Date(expireDateStr);
+                                if (new Date() <= expireDate) {
+                                    setIsPro(true);
+                                    localStorage.setItem('proExpireDate', expireDateStr); 
+                                } else {
+                                    setIsPro(false);
+                                    localStorage.removeItem('proExpireDate');
+                                    setPopupType('expired'); 
+                                }
+                            } else {
+                                setIsPro(false);
+                                localStorage.removeItem('proExpireDate');
+                            }
+                        }).catch(err => console.log('Offline / Fetch Error:', err));
+                    } else {
+                        setUser(null);
+                        setIsPro(false);
+                        localStorage.removeItem('proExpireDate');
+                    }
+                    setAuthLoading(false);
+                });
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => { localStorage.setItem('isStopwatchOn', JSON.stringify(isStopwatchOn)); }, [isStopwatchOn]);
+            useEffect(() => { localStorage.setItem('isUiMuted', JSON.stringify(isUiMuted)); }, [isUiMuted]);
+            useEffect(() => {
+                const storedNames = JSON.parse(localStorage.getItem('swimmerNamesList')) || []; setSavedNames(storedNames);
+                const storedStopHistory = JSON.parse(localStorage.getItem('persistentStopHistory'));
+                if (storedStopHistory && storedStopHistory.length > 0) { setStopwatchHistory(storedStopHistory); setHistoryMode('stop'); }
+                if (window.speechSynthesis) window.speechSynthesis.getVoices();
+            }, []);
+
+            useEffect(() => {
+                let frameId;
+                const updateTimer = () => {
+                    if (isStopwatchRunning) {
+                        const elapsed = Date.now() - raceStartTime.current;
+                        if (timeTextRef.current) timeTextRef.current.innerText = formatTime(elapsed, 'colon');
+                        if (ringCircleRef.current) { const progress = (elapsed % 60000) / 60000; ringCircleRef.current.style.strokeDashoffset = CIRCUMFERENCE - (progress * CIRCUMFERENCE); }
+                        frameId = requestAnimationFrame(updateTimer);
+                    } else {
+                        if (timeTextRef.current) timeTextRef.current.innerText = formatTime(finalTime, 'colon');
+                        if (ringCircleRef.current) { const progress = (finalTime % 60000) / 60000; ringCircleRef.current.style.strokeDashoffset = CIRCUMFERENCE - (progress * CIRCUMFERENCE); }
+                    }
+                };
+                if (screen === 'stopwatch') updateTimer();
+                return () => cancelAnimationFrame(frameId);
+            }, [isStopwatchRunning, finalTime, screen]);
+
+            const getDaysLeft = () => {
+                const expire = localStorage.getItem('proExpireDate');
+                if (!expire) return null;
+                const expDate = new Date(expire);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                expDate.setHours(0,0,0,0);
+                const diffTime = expDate - today;
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            };
+            const daysLeft = getDaysLeft();
+            const isWarning = daysLeft !== null && daysLeft <= 7;
+
+            const triggerVibrate = () => { if (typeof navigator !== 'undefined' && navigator.vibrate) try { navigator.vibrate(40); } catch(e) {} };
+            const playClickSound = () => {
+                if (isUiMuted) return; 
+                const ctx = getAudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+                osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05);
+            };
+            
+            const playEndBeep = () => {
+                if (isUiMuted || cancelRef.current) return; 
+                const ctx = getAudioContext(); 
+                const osc = ctx.createOscillator(); 
+                const gain = ctx.createGain(); 
+                osc.type = 'square'; 
+                osc.frequency.setValueAtTime(1000, ctx.currentTime); 
+                gain.gain.setValueAtTime(4.0, ctx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
+                osc.connect(gain); 
+                gain.connect(ctx.destination); 
+                osc.start(); 
+                osc.stop(ctx.currentTime + 0.6);
+            };
+
+            const btnClick = (callback) => { triggerVibrate(); playClickSound(); if (callback) callback(); };
+
+            const handleInstallClick = () => {
+                btnClick();
+                if (isIOS) {
+                    setPopupType('iosInstall'); 
+                } else if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        setDeferredPrompt(null);
+                    });
+                } else {
+                    setPopupType('iosInstall'); 
+                }
+            };
+
+            const handleLogin = () => {
+                setAuthLoading(true);
+                auth.signInWithPopup(googleProvider).then(() => {
+                    setPopupType(null); 
+                }).catch((error) => {
+                    console.error("Login failed", error);
+                    setAuthLoading(false);
+                });
+            };
+
+            const handleLogout = () => {
+                btnClick(() => {
+                    setPopupType(null);
+                    auth.signOut();
+                    setScreen('menu');
+                });
+            };
+
+            const handleClearCache = () => {
+                btnClick(() => {
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            for (let name of names) caches.delete(name);
+                        });
+                    }
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.getRegistrations().then(registrations => {
+                            for (let registration of registrations) registration.unregister();
+                        });
+                    }
+                    setTimeout(() => { window.location.reload(true); }, 300);
+                });
+            };
+
+            const handleCopyUrl = () => {
+                btnClick();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText("https://www.opl.to/bb3company?openExternalBrowser=1").then(() => {
+                        setCopyText('COPIED!');
+                        setTimeout(() => setCopyText('COPY URL'), 2000);
+                    }).catch(err => console.error('Failed to copy!', err));
+                }
+            };
+
+            const getSmartBuyMessage = () => {
+                return `ขอสมัครใช้งานแพ็กเกจ PRO 1 ปี (69 บาท) ครับ\nอีเมลที่ผมใช้ล็อกอินแอปคือ: ${user ? user.email : '[กรุณาพิมพ์อีเมล Gmail ของคุณที่นี่]'}`;
+            };
+
+            const handleCopyBuyMessage = () => {
+                btnClick();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(getSmartBuyMessage()).then(() => {
+                        setCopyBuyText('COPIED!');
+                        setTimeout(() => setCopyBuyText('COPY ข้อความสั่งซื้อ'), 2000);
+                    }).catch(err => console.error('Failed to copy!', err));
+                }
+            };
+
+            const handleStopwatchToggle = () => {
+                btnClick(() => {
+                    if (!user) { setPopupType('login'); return; }
+                    if (!isPro) { setPopupType('buy'); return; }
+                    setIsStopwatchOn(!isStopwatchOn);
+                });
+            };
+
+            const handleModeSelection = (id) => {
+                btnClick(() => setSelectedMode(prev => prev === id ? null : id));
+            };
+
+            const formatTime = (ms, format = 'colon') => {
+                const minutes = Math.floor(ms / 60000); const seconds = Math.floor((ms % 60000) / 1000); const centiseconds = Math.floor((ms % 1000) / 10);
+                const m = minutes.toString().padStart(2, '0'); const s = seconds.toString().padStart(2, '0'); const c = centiseconds.toString().padStart(2, '0');
+                return format === 'colon' ? `${m}:${s}:${c}` : `${m}.${s}.${c}`;
+            };
+
+            const handleStopwatchAction = (action) => {
+                if (!isStopwatchRunning || isCooldown) return; 
+                
+                const elapsed = Date.now() - raceStartTime.current; 
+                let currentHist = [...stopwatchHistory]; 
+                let currentMode = historyMode;
+                let isEnding = false;
+
+                if (isNewSession) {
+                    if (action === 'lap') { currentHist = []; localStorage.removeItem('persistentStopHistory'); currentMode = 'lap'; } else if (action === 'stop') currentMode = 'stop';
+                    setHistoryMode(currentMode); setIsNewSession(false);
+                }
+                
+                if (currentMode === 'lap') {
+                    currentHist.push({ lap: currentHist.length + 1, time: elapsed });
+                    if (action === 'stop' || currentHist.length >= 5) { 
+                        setIsStopwatchRunning(false); 
+                        setFinalTime(elapsed); 
+                        isEnding = true; 
+                    }
+                } else {
+                    currentHist.unshift({ lap: null, time: elapsed }); 
+                    if (currentHist.length > 5) currentHist.pop();
+                    setIsStopwatchRunning(false); 
+                    setFinalTime(elapsed); 
+                    localStorage.setItem('persistentStopHistory', JSON.stringify(currentHist));
+                    isEnding = true; 
+                }
+                setStopwatchHistory(currentHist);
+
+                if (isEnding) {
+                    playEndBeep(); 
+                    
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                        try { navigator.vibrate(1500); } catch(e) {} 
+                    }
+                    
+                    setIsCooldown(true); 
+                    setTimeout(() => {
+                        setIsCooldown(false); 
+                    }, 1500);
+                }
+            };
+
+            const clearHistory = () => { setStopwatchHistory([]); setHistoryMode('stop'); localStorage.removeItem('persistentStopHistory'); setFinalTime(0); };
+            const checkAndClearLapHistory = () => { if (historyMode === 'lap') { setStopwatchHistory([]); setHistoryMode('stop'); } };
+            const saveNewName = () => {
+                if (!tempInputName.trim()) return; const newName = tempInputName.trim();
+                if (!savedNames.includes(newName)) { const newNamesList = [...savedNames, newName]; setSavedNames(newNamesList); localStorage.setItem('swimmerNamesList', JSON.stringify(newNamesList)); }
+                setLanes(prev => ({ ...prev, [activeLaneModal]: newName })); setActiveLaneModal(null); setTempInputName('');
+            };
+            const selectExistingName = (name) => { setLanes(prev => ({ ...prev, [activeLaneModal]: name })); setActiveLaneModal(null); setTempInputName(''); };
+            const deleteSavedName = (nameToDelete, e) => { e.stopPropagation(); btnClick(); const updatedList = savedNames.filter(n => n !== nameToDelete); setSavedNames(updatedList); localStorage.setItem('swimmerNamesList', JSON.stringify(updatedList)); const updatedLanes = { ...lanes }; for (let i = 1; i <= 5; i++) { if (updatedLanes[i] === nameToDelete) updatedLanes[i] = ''; } setLanes(updatedLanes); };
+            const clearCurrentLane = () => { setLanes(prev => ({ ...prev, [activeLaneModal]: '' })); setActiveLaneModal(null); setTempInputName(''); };
+
+            const playWhistle = (duration) => {
+                if (cancelRef.current) return; const ctx = getAudioContext(); const freqs = [2750, 2850, 2960]; 
+                freqs.forEach(f => { const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(f, ctx.currentTime); gain.gain.setValueAtTime(0, ctx.currentTime); gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.02); gain.gain.setValueAtTime(0.08, ctx.currentTime + duration - 0.05); gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + duration); });
+            };
+            
+            const playBeep = () => {
+                if (cancelRef.current) return; const ctx = getAudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'square'; osc.frequency.setValueAtTime(800, ctx.currentTime); gain.gain.setValueAtTime(3.0, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3);
+            };
+
+            const speak = (text, lang = 'en-US', rate = 0.85, forceMale = false) => {
+                return new Promise((resolve) => {
+                    if (cancelRef.current || !window.speechSynthesis) return setTimeout(resolve, 1500);
+                    window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = lang; utterance.rate = rate; utterance.volume = 1.0;
+                    if (forceMale) {
+                        const voices = window.speechSynthesis.getVoices(); const maleKeywords = ['male', 'daniel', 'alex', 'fred', 'aaron', 'arthur', 'eddy', 'gordon', 'ryan', 'guy', 'mac', 'brian', 'david', 'mark'];
+                        const maleVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0]) && maleKeywords.some(kw => v.name.toLowerCase().includes(kw)));
+                        if (maleVoice) { utterance.voice = maleVoice; utterance.pitch = 1.0; } 
+                        else { const fallbackVoice = voices.find(v => v.lang.startsWith('en-GB') || v.lang.startsWith('en-AU') || v.lang.startsWith('en-US')); if (fallbackVoice && lang.startsWith('en')) utterance.voice = fallbackVoice; utterance.pitch = 0.7; }
+                    }
+                    utterance.onend = resolve; utterance.onerror = resolve; const timeout = setTimeout(resolve, 4000); utterance.onstart = () => clearTimeout(timeout); window.speechSynthesis.speak(utterance);
+                });
+            };
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            const checkCancel = () => { if (cancelRef.current) throw new Error("Cancelled"); };
+
+            const handleMainStartClick = () => { 
+                if (!selectedMode) return; 
+                btnClick(() => { 
+                    if (selectedMode === 'quick') {
+                        startSequence(); 
+                    } else {
+                        if (!isPro) {
+                            if (!user) setPopupType('login');
+                            else setPopupType('buy');
+                        } else {
+                            setScreen('setup'); 
+                        }
+                    }
+                }); 
+            };
+
+            const startSequence = async () => {
+                getAudioContext(); cancelRef.current = false; setScreen('running'); setStep(0); checkAndClearLapHistory();
+                try {
+                    if (selectedMode === 'quick') {
+                        setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('take your marks', 'en-US', 0.85, true); checkCancel(); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
+                        setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
+                    } else if (selectedMode === 'ready') {
+                        setStep(1); setStatusText('3 SHORT WHISTLES'); setSubText('GET READY'); setSubTextTh('เตรียมความพร้อม');
+                        for (let i = 0; i < 3; i++) { checkCancel(); playWhistle(0.15); await sleep(400); } await sleep(Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000); checkCancel();
+                        setStep(2); setStatusText('1 LONG WHISTLE'); setSubText(readyStyle === 'freestyle' ? 'STEP UP' : 'JUMP IN'); setSubTextTh(readyStyle === 'freestyle' ? 'ขึ้นแท่นสตาร์ท' : 'ลงสระ'); playWhistle(0.8); await sleep(3500);
+                        if (readyStyle === 'backstroke') { checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); await sleep(3500); } checkCancel();
+                        setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('Take your marks', 'en-US', 0.85, true); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
+                        setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
+                    } else if (selectedMode === 'race') {
+                        setStep(0); const evt = EVENTS.find(e => e.id === raceEvent); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); await sleep(500); checkCancel(); setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
+                        let laneText = ""; for (let i = 1; i <= 5; i++) { const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; } await speak(laneText, 'th-TH', 0.95); await sleep(1000); checkCancel();
+                        setStep(1); setStatusText('3 SHORT WHISTLES'); setSubText('GET READY'); setSubTextTh('เตรียมความพร้อม'); for (let i = 0; i < 3; i++) { checkCancel(); playWhistle(0.15); await sleep(400); } await sleep(Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000); checkCancel();
+                        setStep(2); setStatusText('1 LONG WHISTLE'); setSubText(evt.style === 'freestyle' ? 'STEP UP' : 'JUMP IN'); setSubTextTh(evt.style === 'freestyle' ? 'ขึ้นแท่นสตาร์ท' : 'ลงสระ'); playWhistle(0.8); await sleep(3500);
+                        if (evt.style === 'backstroke' || evt.id === 'relay_med') { checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); await sleep(3500); } checkCancel();
+                        setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('Take your marks', 'en-US', 0.85, true); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
+                        setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
+                    }
+                    reset();
+                } catch (e) {}
+            };
+            const reset = () => { cancelRef.current = true; window.speechSynthesis.cancel(); setIsStopwatchRunning(false); checkAndClearLapHistory(); setScreen('menu'); };
+
+            const IcoSpeaker = ({ className="" }) => <span className={`material-symbols-outlined ${className}`} style={{fontSize: '28px'}}>volume_up</span>;
+            const IcoSpeakerMuted = ({ className="" }) => <span className={`material-symbols-outlined ${className}`} style={{fontSize: '28px'}}>volume_off</span>;
+            const IcoPlay = ({ size="36px" }) => <span className="material-symbols-outlined" style={{fontSize: size}}>play_arrow</span>;
+            const IcoBack = () => <span className="material-symbols-outlined" style={{fontSize: '28px'}}>arrow_back_ios_new</span>;
+            const IcoClose = () => <span className="material-symbols-outlined" style={{fontSize: '28px'}}>close</span>;
+            const IcoDelete = () => <span className="material-symbols-outlined" style={{fontSize: '24px'}}>delete</span>;
+            const IcoQuick = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>bolt</span>;
+            const IcoWhistle = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>sports</span>;
+            const IcoTrophy = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>emoji_events</span>;
+            const IcoAnnounce = ({ size="120px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: 'var(--neon)' }}>emoji_people</span>;
+            const IcoShortWhistles = ({ size="120px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: 'var(--neon)' }}>voice_over_off</span>;
+            const IcoLongWhistle = ({ size="120px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: 'var(--neon)' }}>physical_therapy</span>;
+            const IcoTakeMarks = ({ size="120px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: 'var(--neon)' }}>spatial_audio_off</span>;
+
+            const IcoLine = () => (
+                <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                </svg>
+            );
+
+            const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
+                const isActive = selectedMode === id;
+                const showProBadge = isProOnly && !isPro; 
+                return (
+                    <div onClick={() => handleModeSelection(id)} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative ${isActive ? 'active' : ''}`}>
+                        {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
+                        <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
+                        <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '16px' }}><span>{title1}</span><span>{title2}</span></div>
+                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
+                    </div>
+                );
+            };
+
+            const renderPopup = () => {
+                if (!popupType) return null;
+                return (
+                    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" onClick={() => btnClick(() => setPopupType(null))}>
+                        <div className="bg-[#111] border border-[var(--neon)] rounded-2xl p-6 flex flex-col items-center shadow-[0_0_20px_rgba(200,255,0,0.2)] w-full max-w-[320px] relative" onClick={e => e.stopPropagation()}>
+                            
+                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press">
+                                <IcoClose />
+                            </button>
+
+                            {popupType === 'iosInstall' && (
+                                <div className="w-full flex flex-col items-center mt-2 mb-2">
+                                    <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>ios_share</span>
+                                    <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอปลงเครื่อง</h3>
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
+                                        เนื่องจากข้อจำกัดของระบบ iOS<br/>กรุณาติดตั้งแอปด้วยตัวเองตามขั้นตอนดังนี้ครับ
+                                    </p>
+                                    
+                                    <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
+                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
+                                            <span>กดปุ่มแชร์ <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>ios_share</span> ด้านล่างของจอ</span>
+                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
+                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
+                                            <span>เลือกเมนู <strong className="text-white">เพิ่มไปยังหน้าจอโฮม</strong></span>
+                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm pl-6">
+                                            <span className="text-[11px] text-[#888]">(Add to Home Screen) <span className="material-symbols-outlined inline-block align-middle ml-1" style={{fontSize:'14px'}}>add_box</span></span>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
+                                        รับทราบ
+                                    </button>
+                                </div>
+                            )}
+
+                            {popupType === 'profile' && (
+                                <div className="w-full flex flex-col items-center mt-2 mb-2">
+                                    <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>account_circle</span>
+                                    <h3 className="text-white font-mont-bold text-lg mb-1 text-center tracking-wide">PRO Member</h3>
+                                    <p className="text-[#aaa] font-kanit-regular text-sm text-center mb-1">{user?.email}</p>
+                                    
+                                    <div className="bg-[#222] rounded-lg px-6 py-3 mt-4 mb-6 border border-[#333] w-full">
+                                        <p className="text-[#888] font-kanit-regular text-xs text-center mb-1">วันหมดอายุ (Expire Date)</p>
+                                        <p className={`font-mont-bold text-center text-xl ${isWarning ? 'text-[#ff3b30]' : 'text-[var(--neon)]'}`}>{localStorage.getItem('proExpireDate') || 'N/A'}</p>
+                                    </div>
+
+                                    <button onClick={handleLogout} className="w-full bg-[#ff3b30]/10 border border-[#ff3b30]/50 text-[#ff3b30] rounded-xl py-3 font-mont-bold text-sm btn-press flex items-center justify-center space-x-2 transition-colors">
+                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>logout</span>
+                                        <span>Log Out (ออกจากระบบ)</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {popupType === 'login' && (
+                                <div className="w-full flex flex-col items-center mt-2 mb-2">
+                                    <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ล็อกอินเพื่อใช้งาน</h3>
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6">ฟังก์ชันนี้สงวนไว้สำหรับสมาชิกเท่านั้น กรุณาล็อกอินผ่าน Google ครับ</p>
+                                    <button onClick={handleLogin} className="w-full bg-white text-black rounded-xl py-3 flex items-center justify-center space-x-3 btn-press transition-all hover:bg-gray-200">
+                                        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/><path fill="none" d="M1 1h22v22H1z"/></svg>
+                                        <span className="font-mont-bold text-sm">Sign in with Google</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {(popupType === 'buy' || popupType === 'expired') && (
+                                <div className="w-full flex flex-col items-center mt-2 mb-2">
+                                    <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>{popupType === 'expired' ? 'hourglass_disabled' : 'workspace_premium'}</span>
+                                    <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">{popupType === 'expired' ? 'แพ็กเกจ PRO หมดอายุแล้ว' : 'อัปเกรดเป็น PRO'}</h3>
+                                    <p className="text-[#aaa] font-kanit-regular text-xs text-center mb-5 leading-relaxed">
+                                        ฟังก์ชันนี้สำหรับสมาชิก PRO เท่านั้น<br/>ปลดล็อกทุกระบบเพื่อการฝึกซ้อมที่สมจริง<br/><span className="text-[var(--neon)] font-mont-bold">อัปเกรดเพียง 69 บาท / 1 ปีเต็ม!</span>
+                                    </p>
+                                    
+                                    <button onClick={handleCopyBuyMessage} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 transition-colors mb-4 focus:bg-[var(--neon)] focus:text-black">
+                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
+                                        <span>{copyBuyText}</span>
+                                    </button>
+
+                                    <a href="https://www.opl.to/bb3company?openExternalBrowser=1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-full bg-[#00B900] text-white rounded-xl py-3.5 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(0,185,0,0.2)]">
+                                        <IcoLine />
+                                        <span className="font-mont-bold tracking-wide ml-1">ทัก LINE เพื่ออัปเกรด</span>
+                                    </a>
+                                </div>
+                            )}
+
+                            {popupType === 'share' && (
+                                <div className="w-full flex flex-col items-center mt-2">
+                                    <h3 className="text-neon font-kanit-regular text-2xl mb-5 mt-2 text-center tracking-wide">SHARE LINK...</h3>
+                                    <div className="flex space-x-5 mb-6">
+                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-14 h-14 bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)]">
+                                            <IcoLine />
+                                        </a>
+                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-14 h-14 bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)]">
+                                            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg>
+                                        </a>
+                                    </div>
+                                    <button onClick={handleCopyUrl} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3.5 font-mont-bold text-xs uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors focus:bg-[var(--neon)] focus:text-black">
+                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
+                                        <span>{copyText}</span>
+                                    </button>
+                                    <div className="bg-white p-2 rounded-xl mt-6 mb-5 border-2 border-transparent shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden">
+                                        <img src="qrcode.png" alt="QR Code" className="w-40 h-40 object-contain" />
+                                    </div>
+                                    <div className="w-full border-t border-[#333] pt-4 text-center">
+                                        <p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p>
+                                        <a href="mailto:bb3company@gmail.com" className="text-neon font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                );
+            }
+
+            if (authLoading) {
+                return (
+                    <div className="h-dvh w-full flex items-center justify-center bg-[#050505]">
+                        <div className="w-12 h-12 border-4 border-zinc-800 border-t-[var(--neon)] rounded-full animate-spin"></div>
+                    </div>
+                );
+            }
+
+            if (screen === 'menu') {
+                return (
+                    <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
+                        
+                        <div className="flex justify-between items-start w-full pt-2 flex-shrink-0">
+                            <div className="w-24 h-8 flex justify-start items-center">
+                                <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex items-center h-full">
+                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[12px] tracking-widest">SHARE</span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-center justify-center flex-1" onClick={handleStopwatchToggle}>
+                                <div className="flex items-center space-x-1.5 mb-[3px] cursor-pointer">
+                                    <span className={`material-symbols-outlined ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '22px'}}>timer</span>
+                                    <div className={`w-[44px] h-[22px] rounded-full relative transition-colors duration-300 ${!isPro ? 'bg-[#333]' : isStopwatchOn ? 'bg-[var(--neon)]' : 'bg-[#ff3b30]'}`}>
+                                        <div className={`absolute top-[3px] w-[16px] h-[16px] bg-white rounded-full transition-transform duration-300 flex items-center justify-center ${isStopwatchOn && isPro ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}><span className={`font-mont-bold ${isStopwatchOn && isPro ? 'text-[var(--neon)]' : 'text-[#333]'}`} style={{fontSize: '10px', lineHeight: '1'}}>{!isPro ? <span className="material-symbols-outlined" style={{fontSize: '10px', color: '#666'}}>lock</span> : 'I'}</span></div>
+                                    </div>
+                                </div>
+                                <span className={`font-sg-light tracking-widest uppercase ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '10px'}}>STOPWATCH</span>
+                            </div>
+
+                            <div className="w-24 h-8 flex justify-end items-center">
+                                <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>
+                                    {isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="text-center mt-3 mb-1 flex flex-col items-center justify-center w-full flex-shrink-0">
+                            <h1 className="font-sg-bold text-white uppercase leading-[0.85]" style={{ fontSize: '50px' }}>SWIM</h1>
+                            <h1 className="font-sg-bold text-neon uppercase leading-[0.85]" style={{ fontSize: '50px', marginTop: '2px' }}>START</h1>
+                            
+                            <div className="flex items-center justify-center mt-[8px]">
+                                <div className="font-sg-light text-white uppercase tracking-[0.4em]" style={{ fontSize: '20px', marginRight: isPro ? '-0.4em' : '0' }}>TRAINER</div>
+                                {isPro && (
+                                    <div onClick={() => btnClick(() => setPopupType('profile'))} className={`ml-3 px-1.5 py-0.5 rounded-sm flex items-center justify-center cursor-pointer btn-press ${isWarning ? 'bg-[#ff3b30] animate-breathing-red' : 'bg-[var(--neon)] animate-breathing'}`}>
+                                        <span className="font-mont-bold text-black leading-none" style={{fontSize: '11px', letterSpacing: '0.05em'}}>PRO</span>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {isPro && isWarning && daysLeft !== null && (
+                                <p className="text-[#ff3b30] font-mont-medium mt-2" style={{fontSize: '10px'}}>
+                                    Your PRO subscription will expire in {daysLeft} day{daysLeft !== 1 ? 's' : ''}.
+                                </p>
+                            )}
+                        </div>
+
+                        {!isStandalone && (
+                            <div onClick={handleInstallClick} className="w-full bg-[#ff3b30] rounded-[100px] py-1 px-2 mb-2 mt-1 flex items-center justify-center cursor-pointer btn-press shadow-[0_0_10px_rgba(255,59,48,0.4)] flex-shrink-0">
+                                <span className="text-white font-kanit-regular tracking-wide text-center uppercase" style={{ fontSize: '10px' }}>
+                                    CLICK : INSTALL FOR BEST PERFORMANCE (กดติดตั้งเพื่อใช้งานได้เต็มประสิทธิภาพ)
+                                </span>
+                            </div>
+                        )}
+
+                        <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] my-4 min-h-[140px]">
+                            {!selectedMode ? (
+                                <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-start p-3 bg-[#0a0a0a] border border-[#222] rounded-lg animate-fade-in overflow-y-auto hide-scroll">
+                                    <div className="flex items-center space-x-2 mb-2 flex-shrink-0">
+                                        {selectedMode === 'quick' && <IcoQuick active={true} size="24px" />}
+                                        {selectedMode === 'ready' && <IcoWhistle active={true} size="24px" />}
+                                        {selectedMode === 'race' && <IcoTrophy active={true} size="24px" />}
+                                        <span className="text-neon font-sg-bold uppercase text-[16px]">
+                                            {selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : 'RACE MODE'}
+                                        </span>
+                                    </div>
+                                    <p className="text-white font-mont-medium text-center leading-[1.3] mb-3 px-2 flex-shrink-0" style={{ fontSize: '11px' }}>
+                                        {selectedMode === 'quick' && 'Designed specifically for reaction time training. Skips all whistle commands, going straight to the "Take your marks" command followed by a randomized starting beep.'}
+                                        {selectedMode === 'ready' && 'Simulates standard practice starts. The system sounds 3 short whistles and 1 long whistle for stepping up (an extra long whistle is added for backstroke), followed by a randomized start sequence.'}
+                                        {selectedMode === 'race' && "Full real-competition simulation. Begins with an announcement of the event and swimmers' names, followed by the complete competition whistle and start sequence."}
+                                    </p>
+                                    <p className="text-[#888] font-mont-regular text-center leading-[1.4] px-1 border-t border-[#333] pt-2 pb-1" style={{ fontSize: '10px' }}>
+                                        {selectedMode === 'quick' && 'โหมดสำหรับฝึกความเร็วในการออกตัวโดยเฉพาะ ข้ามขั้นตอนการเป่านกหวีดทั้งหมด ระบบจะสั่งเข้าที่ และสุ่มระยะเวลาปล่อยตัวทันที เพื่อให้นักกีฬาโฟกัสไปที่เสียงสัญญาณปล่อยตัวเท่านั้น'}
+                                        {selectedMode === 'ready' && 'โหมดจำลองการซ้อมตามมาตรฐานการแข่งขัน ระบบจะเป่านกหวีดสั้น 3 ครั้ง และนกหวีดยาว 1 ครั้งเพื่อสั่งขึ้นแท่นสตาร์ท (ท่ากรรเชียงจะเพิ่มนกหวีดยาวเพื่อสั่งลงสระ) จากนั้นจึงเข้าสู่ขั้นตอนการปล่อยตัวแบบสุ่มเวลา'}
+                                        {selectedMode === 'race' && 'โหมดจำลองบรรยากาศการแข่งขันจริงเต็มรูปแบบ เริ่มตั้งแต่ประกาศชื่อรายการแข่งขันและรายชื่อนักกีฬา จากนั้นจะเข้าสู่กระบวนการเป่านกหวีดและปล่อยตัวตามกติกาการแข่งขันจริง'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center w-full mb-4 space-x-4 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                            <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>SELECT MODE</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                        </div>
+
+                        <div className="flex justify-between w-full gap-2 mb-5 flex-shrink-0">
+                            <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
+                            <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard practice\nsequence." isProOnly={true} />
+                            <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real competition\nfeel." isProOnly={true} />
+                        </div>
+
+                        <button onClick={() => selectedMode && handleMainStartClick()} className={`w-full py-2 rounded-2xl flex items-center justify-center space-x-2 flex-shrink-0 transition-all duration-300 ${selectedMode ? 'bg-[var(--neon)] text-black btn-press shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-[#111] text-[#444] border border-[#222] cursor-not-allowed'}`}>
+                            <IcoPlay size="42px" />
+                            <span className="font-sg-medium uppercase" style={{ fontSize: '50px' }}>START</span>
+                        </button>
+                        
+                        <div className="w-full flex justify-between items-center mt-3 pt-3 border-t border-[#222] flex-shrink-0">
+                            <div className="flex items-center space-x-5">
+                                {!user && (
+                                    <button onClick={() => setPopupType('login')} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
+                                        <span className="material-symbols-outlined" style={{fontSize: '14px'}}>login</span>
+                                        <span>Log In</span>
+                                    </button>
+                                )}
+                                <button onClick={handleClearCache} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
+                                    <span className="material-symbols-outlined" style={{fontSize: '14px'}}>sync</span>
+                                    <span>Update System</span>
+                                </button>
+                            </div>
+                            <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.0.0</span>
+                        </div>
+
+                        {renderPopup()}
+                    </div>
+                );
+            }
+
+            if (screen === 'setup') {
+                return (
+                    <div className="h-dvh w-full max-w-md mx-auto flex flex-col p-5 bg-[#050505]">
+                        <div className="flex items-center mb-6 flex-shrink-0"><button onClick={() => btnClick(() => setScreen('menu'))} className="text-white btn-press mr-2 flex items-center justify-center"><IcoBack /></button><h2 className="text-neon font-sg-bold text-2xl uppercase mt-1">{selectedMode === 'ready' ? 'PRACTICE SETUP' : 'RACE SETUP'}</h2></div>
+                        <div className="flex-1 overflow-y-auto hide-scroll">
+                            {selectedMode === 'ready' && (
+                                <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333]">
+                                    <h3 className="text-neon font-sg-bold mb-4 text-center text-lg">STYLE SETUP</h3>
+                                    <div className="flex flex-col space-y-3">
+                                        <button onClick={() => btnClick(() => setReadyStyle('freestyle'))} className={`py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors border btn-press ${readyStyle === 'freestyle' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Freestyle / Others</button>
+                                        <button onClick={() => btnClick(() => setReadyStyle('backstroke'))} className={`py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors border btn-press ${readyStyle === 'backstroke' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Backstroke</button>
+                                    </div>
+                                    <p className="text-center text-xs text-gray-500 mt-4 font-mont-medium">*Includes 2nd long whistle for Backstroke</p>
+                                </div>
+                            )}
+                            {selectedMode === 'race' && (
+                                <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333] flex flex-col justify-center">
+                                    <div className="mb-6"><label className="text-[10px] text-neon font-sg-bold tracking-widest mb-2 block text-center uppercase">Race Event</label><select value={raceEvent} onChange={(e) => { btnClick(); setRaceEvent(e.target.value); }} className="w-full bg-black border border-[#333] text-white p-3 rounded-xl text-sm font-bold focus:outline-none focus:border-neon appearance-none text-center shadow-inner">{EVENTS.map(evt => <option key={evt.id} value={evt.id}>{evt.name}</option>)}</select></div>
+                                    <div className="mb-2"><label className="text-[10px] text-gray-500 font-sg-bold tracking-widest mb-3 block text-center uppercase">Assign Swimmers (Tap to Add)</label>
+                                        <div className="flex justify-between gap-2 px-1">{[1, 2, 3, 4, 5].map(num => (<button key={num} onClick={() => btnClick(() => setActiveLaneModal(num))} className={`flex-1 aspect-square rounded-xl flex items-center justify-center font-sg-bold text-2xl transition-all btn-press ${lanes[num] ? 'bg-neon text-black shadow-[0_0_15px_rgba(200,255,0,0.4)] border border-neon' : 'bg-[#1a1a1a] text-zinc-600 border border-[#333]'}`}>{num}</button>))}</div>
+                                    </div>
+                                    <div className="min-h-[70px] mt-4 flex flex-col justify-start items-center space-y-1">{[1, 2, 3, 4, 5].map(num => { if (lanes[num]) { return (<div key={`detail-${num}`} className="text-xs font-bold text-gray-300"><span className="text-neon mr-2 font-sg-bold tracking-wider">LANE {num}:</span> {lanes[num]}</div>); } return null; })} {Object.values(lanes).every(name => name === '') && (<div className="text-xs text-zinc-600 italic mt-2">ยังไม่มีนักกีฬา (AI จะใช้ชื่อตามช่องว่าย)</div>)}</div>
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={() => btnClick(startSequence)} className="w-full mt-4 bg-neon text-black font-sg-bold text-2xl py-4 rounded-xl shadow-neon flex items-center justify-center space-x-2 btn-press flex-shrink-0"><span>BEGIN SEQUENCE</span></button>
+                        {activeLaneModal && (
+                            <div className="absolute inset-0 z-50 bg-black/95 flex flex-col p-5 backdrop-blur-sm animate-[fadeIn_0.1s_ease-out]">
+                                <div className="flex justify-between items-center mb-6"><h2 className="text-neon font-sg-bold text-2xl tracking-widest mt-1">LANE {activeLaneModal} SETUP</h2><button onClick={() => btnClick(() => setActiveLaneModal(null))} className="text-white btn-press flex items-center justify-center"><IcoClose /></button></div>
+                                <div className="mb-6"><label className="text-[10px] text-gray-400 font-bold tracking-wider mb-2 block uppercase">Add New Swimmer</label><div className="flex space-x-2"><input type="text" value={tempInputName} onChange={(e) => setTempInputName(e.target.value)} placeholder="พิมพ์ชื่อนักกีฬาใหม่ที่นี่..." className="flex-1 bg-zinc-900 border border-zinc-700 text-white p-3 rounded-lg text-sm focus:outline-none focus:border-neon"/><button onClick={() => btnClick(saveNewName)} className="bg-neon text-black font-sg-bold px-4 rounded-lg btn-press tracking-wider">SAVE</button></div></div>
+                                <label className="text-[10px] text-gray-400 font-bold tracking-wider mb-2 block uppercase">Select Saved Swimmer</label>
+                                <div className="flex-1 overflow-y-auto space-y-2 pb-4 hide-scroll">{savedNames.length === 0 ? (<p className="text-center text-zinc-600 text-sm mt-4 italic">ยังไม่มีรายชื่อที่บันทึกไว้</p>) : (savedNames.map((name, idx) => (<div key={idx} onClick={() => btnClick(() => selectExistingName(name))} className="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-3 rounded-lg btn-press"><span className="font-bold text-white text-sm">{name}</span><button onClick={(e) => deleteSavedName(name, e)} className="text-[#ff3b30] flex items-center justify-center w-10 h-10 rounded btn-press"><IcoDelete /></button></div>)))}</div>
+                                <div className="mt-auto grid grid-cols-2 gap-3 pt-4 border-t border-zinc-800 flex-shrink-0"><button onClick={() => btnClick(clearCurrentLane)} className="py-3 rounded-xl border border-red-500 text-red-500 font-bold text-sm btn-press">CLEAR LANE</button><button onClick={() => btnClick(() => setActiveLaneModal(null))} className="py-3 rounded-xl bg-zinc-800 text-white font-bold text-sm btn-press">CANCEL</button></div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            if (screen === 'stopwatch') {
+                return (
+                    <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-4 pb-6 bg-[#050505] relative">
+                        
+                        <div className="text-center mt-0 mb-2 flex flex-col items-center justify-center w-full flex-shrink-0">
+                            <h1 className="font-sg-bold text-white uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px' }}>STOP</h1>
+                            <h1 className="font-sg-bold text-neon uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px', marginTop: '4px' }}>WATCH</h1>
+                        </div>
+                        
+                        <div className="flex-1 flex flex-col items-center justify-center relative min-h-[260px] w-full">
+                            <div className="relative w-[280px] h-[280px] flex items-center justify-center">
+                                <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
+                                    <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
+                                    
+                                    {/* 🌟 สร้างหน้าปัด 12 ขีดเป๊ะๆ (ขีดหลัก 4 ทิศ และขีดรองสีเทา) */}
+                                    {Array.from({ length: 12 }).map((_, i) => {
+                                        const isMajor = i % 3 === 0;
+                                        const angle = (i * 30) * (Math.PI / 180);
+                                        const r1 = isMajor ? 122 : 126; // ความยาวด้านใน
+                                        const r2 = 132; // ขอบด้านนอก
+                                        return (
+                                            <line
+                                                key={`tick-${i}`}
+                                                x1={150 + r1 * Math.sin(angle)}
+                                                y1={150 - r1 * Math.cos(angle)}
+                                                x2={150 + r2 * Math.sin(angle)}
+                                                y2={150 - r2 * Math.cos(angle)}
+                                                stroke={isMajor ? "#fff" : "#555"}
+                                                strokeWidth={isMajor ? "3" : "1.5"}
+                                                strokeLinecap="round"
+                                            />
+                                        );
+                                    })}
+                                    
+                                    <circle ref={ringCircleRef} cx="150" cy="150" r="140" fill="none" stroke="var(--neon)" strokeWidth="12" strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE} transform="rotate(-90 150 150)" style={{ transition: isStopwatchRunning ? 'none' : 'stroke-dashoffset 0.3s' }} />
+                                    {stopwatchHistory.map((item, idx) => { const angle = ((item.time % 60000) / 60000) * 360 - 90; const x = 150 + 140 * Math.cos(angle * Math.PI / 180); const y = 150 + 140 * Math.sin(angle * Math.PI / 180); return (<circle key={idx} cx={x} cy={y} r="5" fill="var(--neon)" stroke="#050505" strokeWidth="2" />); })}
+                                </svg>
+                                
+                                <div className="absolute text-center z-10 translate-y-1">
+                                    {/* 🌟 ฟอนต์ Bebas Neue ขนาด 52px (เอาขีดออกเพื่อโชว์ขีดหน้าปัดที่ 9 และ 3 นาฬิกาแทน) */}
+                                    <span ref={timeTextRef} className="text-white font-bebas tabular-nums" style={{ fontSize: '52px', letterSpacing: '0.04em' }}>{formatTime(finalTime, 'colon')}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex w-full space-x-3 h-[85px] mb-4 mt-4 flex-shrink-0">
+                            {isCooldown ? (
+                                <button className="flex-1 bg-[#222] text-[#555] border border-[#333] rounded-2xl flex items-center justify-center cursor-not-allowed transition-all duration-300">
+                                    <span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>START</span>
+                                </button>
+                            ) : (
+                                <button onClick={() => btnClick(() => { if (isStopwatchRunning) { handleStopwatchAction('stop'); } else { startSequence(); } })} className="flex-1 bg-[var(--neon)] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)] transition-all duration-300">
+                                    {isStopwatchRunning && <div className="w-5 h-5 bg-black rounded-sm mr-4"></div>}<span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>{isStopwatchRunning ? 'STOP' : 'START'}</span>
+                                </button>
+                            )}
+                            
+                            {isStopwatchRunning && !isCooldown && (
+                                <button onClick={() => btnClick(() => handleStopwatchAction('lap'))} className="w-[100px] bg-[#FFEA00] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(255,234,0,0.2)] transition-all duration-300"><span className="font-sg-expanded-medium uppercase" style={{ fontSize: '24px', letterSpacing: '0.1em', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LAP</span></button>
+                            )}
+                        </div>
+                        
+                        <div className="flex items-center w-full mb-3 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                            <span className="text-neon font-sg-regular uppercase mx-4" style={{ fontSize: '14px' }}>RECENT STATISTICS</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                        </div>
+                        
+                        <div className="border border-[#333] rounded-2xl px-4 py-3 flex justify-between w-full h-[205px] flex-shrink-0">
+                            
+                            <div className="flex-1 flex flex-col relative mr-4 pt-1">
+                                <span className="absolute -left-1 top-[5px] text-[10px] text-white font-mont-bold uppercase tracking-wider">LAST</span>
+                                
+                                <div className="flex flex-col items-center justify-start w-full space-y-1.5">
+                                    {stopwatchHistory.length === 0 ? (
+                                        <div className="flex-1 flex items-center justify-center w-full mt-10">
+                                            <span className="text-zinc-600 font-mont-medium text-xs italic">- ยังไม่มีสถิติ -</span>
+                                        </div>
+                                    ) : (
+                                        stopwatchHistory.map((item, idx) => (
+                                            <div key={idx} className="flex justify-center items-center w-full border-b border-dashed border-[#222] pb-0.5 h-[28px]">
+                                                {historyMode === 'lap' && (
+                                                    <span className="text-white font-sg-bold text-sm w-[20px] text-right mr-3">{item.lap}:</span>
+                                                )}
+                                                <span className="text-white font-mont-regular tabular-nums tracking-wider text-[15px]">{formatTime(item.time, 'dot')}</span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col w-[100px] justify-between h-full pt-1">
+                                <button onClick={() => btnClick(clearHistory)} className="bg-[var(--neon)] text-black rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[42px] flex items-center justify-center">CLEAR</button>
+                                <button onClick={() => btnClick(reset)} className="bg-[#cc0000] text-white rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[50px] flex items-center justify-center mt-auto mb-1">EXIT</button>
+                            </div>
+
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
+                    <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                        <button onClick={() => btnClick(reset)} className="text-white btn-press mr-4 flex items-center justify-center"><IcoBack /></button>
+                        <div className="flex space-x-2 relative">{[1, 2, 3, 4].map(n => <div key={n} className={`w-3 h-3 rounded-full transition-all ${step >= n ? 'bg-[var(--neon)] shadow-[0_0_10px_var(--neon)]' : 'bg-[#333]'}`}></div>)}</div>
+                        <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`w-8 h-8 flex items-center justify-center btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>{isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}</button>
+                    </div>
+                    <div className="text-center mb-6 flex-shrink-0"><h2 className="text-neon font-sg-bold text-xl uppercase mt-1">{selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : 'RACE MODE'}</h2><p className="text-white text-sm font-bold tracking-widest uppercase mt-1">STEP {step} OF 4</p></div>
+                    <div className="text-center mb-6 h-10 flex-shrink-0 flex items-center justify-center"><h3 className="text-white font-sg-bold text-3xl tracking-widest uppercase">{statusText}</h3></div>
+                    <div className="flex-1 flex flex-col items-center justify-center relative mt-2 mb-6">
+                        {step === 0 && selectedMode === 'race' && (<IcoAnnounce />)}{step === 1 && (<IcoShortWhistles />)}{step === 2 && (<IcoLongWhistle />)}{step === 3 && (<IcoTakeMarks />)}{step === 4 && (<div className="relative flex items-center justify-center"><div className="absolute w-40 h-40 border border-[var(--neon)] rounded-full animate-ping opacity-20"></div><div className="absolute w-32 h-32 border-2 border-[var(--neon)] rounded-full animate-pulse opacity-50"></div><div className="w-24 h-24 rounded-full border-4 border-[var(--neon)] flex items-center justify-center shadow-[0_0_15px_rgba(200,255,0,0.6)] text-neon"><IcoSpeaker /></div></div>)}
+                        <div className="min-h-[80px] mt-6 text-center flex flex-col items-center justify-start flex-shrink-0">
+                            {step === 4 ? (<><h1 className="text-neon font-sg-bold tracking-widest leading-none" style={{ fontSize: '64px', textShadow: '0 0 10px rgba(200,255,0,0.7)' }}>GO!</h1><p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>ไป</p></>) : (<><p className="text-neon font-sg-bold uppercase" style={{ fontSize: '32px', lineHeight: '1.2', letterSpacing: '0.05em' }}>{subText}</p>{subTextTh && <p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>{subTextTh}</p>}</>)}
+                        </div>
+                    </div>
+                    <div className="mt-auto pt-2 flex-shrink-0"><button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press"><div className="w-5 h-5 bg-black rounded-sm"></div><span className="tracking-widest">STOP</span></button></div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed')); });
+        }
+    </script>
+</body>
+</html>
