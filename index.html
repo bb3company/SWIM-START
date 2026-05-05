@@ -290,7 +290,7 @@
                 const gain = ctx.createGain(); 
                 osc.type = 'square'; 
                 osc.frequency.setValueAtTime(1000, ctx.currentTime); 
-                gain.gain.setValueAtTime(4.0, ctx.currentTime); 
+                gain.gain.setValueAtTime(1.5, ctx.currentTime); 
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
                 osc.connect(gain); 
                 gain.connect(ctx.destination); 
