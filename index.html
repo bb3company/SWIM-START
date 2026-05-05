@@ -26,7 +26,6 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- ฟอนต์ Bebas Neue และฟอนต์อื่นๆ -->
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@400&family=Montserrat:wght@400;500;700&family=Science+Gothic:wdth,wght@125,300;125,400;125,500;125,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
 
@@ -301,6 +300,7 @@
 
             const btnClick = (callback) => { triggerVibrate(); playClickSound(); if (callback) callback(); };
 
+            // 🌟 แก้ไขลอจิกการกดปุ่ม Install เพื่อรองรับ Android กรณีที่ Prompt ไม่เด้ง
             const handleInstallClick = () => {
                 btnClick();
                 if (isIOS) {
@@ -311,7 +311,8 @@
                         setDeferredPrompt(null);
                     });
                 } else {
-                    setPopupType('iosInstall'); 
+                    // หากเป็น Android แต่ไม่มี deferredPrompt (ติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ)
+                    setPopupType('androidInstall'); 
                 }
             };
 
@@ -563,6 +564,32 @@
                             <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press">
                                 <IcoClose />
                             </button>
+
+                            {/* 🌟 หน้าต่าง Popup สำหรับ Android */}
+                            {popupType === 'androidInstall' && (
+                                <div className="w-full flex flex-col items-center mt-2 mb-2">
+                                    <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>more_vert</span>
+                                    <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอป (Android)</h3>
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
+                                        แอปอาจถูกติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ<br/>คุณสามารถติดตั้งเองได้ง่ายๆ ดังนี้ครับ
+                                    </p>
+                                    
+                                    <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
+                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
+                                            <span>แตะเมนู 3 จุด <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>more_vert</span> มุมขวาบนจอ</span>
+                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
+                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
+                                            <span>เลือก <strong className="text-white">เพิ่มลงหน้าจอหลัก</strong><br/><span className="text-[11px] text-[#888]">(Add to Home screen)</span></span>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
+                                        รับทราบ
+                                    </button>
+                                </div>
+                            )}
 
                             {popupType === 'iosInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
@@ -853,11 +880,11 @@
                                 <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
                                     <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
                                     
-                                    {/* 🌟 สร้างหน้าปัด 12 ขีดเป๊ะๆ (ขีดหลัก 4 ทิศ และขีดรองสีเทา) */}
+                                    {/* 🌟 สร้างหน้าปัด 12 ขีดแบบคลาสสิก */}
                                     {Array.from({ length: 12 }).map((_, i) => {
-                                        const isMajor = i % 3 === 0;
+                                        const isMajor = i % 3 === 0; // ตำแหน่ง 12, 3, 6, 9
                                         const angle = (i * 30) * (Math.PI / 180);
-                                        const r1 = isMajor ? 122 : 126; // ความยาวด้านใน
+                                        const r1 = isMajor ? 122 : 126; // ความยาวด้านใน (ขีดหลักจะยาวกว่า)
                                         const r2 = 132; // ขอบด้านนอก
                                         return (
                                             <line
@@ -878,7 +905,7 @@
                                 </svg>
                                 
                                 <div className="absolute text-center z-10 translate-y-1">
-                                    {/* 🌟 ฟอนต์ Bebas Neue ขนาด 52px (เอาขีดออกเพื่อโชว์ขีดหน้าปัดที่ 9 และ 3 นาฬิกาแทน) */}
+                                    {/* 🌟 ฟอนต์ Bebas Neue ขนาด 52px และนำขีด - ซ้ายขวาออก */}
                                     <span ref={timeTextRef} className="text-white font-bebas tabular-nums" style={{ fontSize: '52px', letterSpacing: '0.04em' }}>{formatTime(finalTime, 'colon')}</span>
                                 </div>
                             </div>
