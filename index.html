@@ -290,7 +290,6 @@
                 const gain = ctx.createGain(); 
                 osc.type = 'square'; 
                 osc.frequency.setValueAtTime(1000, ctx.currentTime); 
-                // 🌟 ความดังปรับไว้ที่ 1.5 ตามที่ตกลงกันไว้ครับ
                 gain.gain.setValueAtTime(1.5, ctx.currentTime); 
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
                 osc.connect(gain); 
@@ -560,7 +559,7 @@
                     <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" onClick={() => btnClick(() => setPopupType(null))}>
                         <div className="bg-[#111] border border-[var(--neon)] rounded-2xl p-6 flex flex-col items-center shadow-[0_0_20px_rgba(200,255,0,0.2)] w-full max-w-[320px] relative" onClick={e => e.stopPropagation()}>
                             
-                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press">
+                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10">
                                 <IcoClose />
                             </button>
 
@@ -666,27 +665,47 @@
                                 </div>
                             )}
 
+                            {/* 🌟 ปรับปรุง Popup หน้า SHARE ใหม่ให้ตรงตามแบบภาพ 100% */}
                             {popupType === 'share' && (
-                                <div className="w-full flex flex-col items-center mt-2">
-                                    <h3 className="text-neon font-kanit-regular text-2xl mb-5 mt-2 text-center tracking-wide">SHARE LINK...</h3>
-                                    <div className="flex space-x-5 mb-6">
-                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-14 h-14 bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)]">
+                                <div className="w-full flex flex-col mt-1">
+                                    <h3 className="text-[var(--neon)] font-sg-bold text-[22px] mb-4 text-left tracking-wide uppercase">SHARE LINK</h3>
+                                    
+                                    <div className="flex space-x-3 mb-6">
+                                        <button onClick={handleCopyUrl} className="flex-1 bg-[#1a1a1a] border border-[#333] text-white rounded-xl py-0 font-mont-bold text-[12px] uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors">
+                                            <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
+                                            <span>{copyText}</span>
+                                        </button>
+                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)] flex-shrink-0">
                                             <IcoLine />
                                         </a>
-                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-14 h-14 bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)]">
-                                            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg>
+                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)] flex-shrink-0">
+                                            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg>
                                         </a>
                                     </div>
-                                    <button onClick={handleCopyUrl} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3.5 font-mont-bold text-xs uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors focus:bg-[var(--neon)] focus:text-black">
-                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
-                                        <span>{copyText}</span>
-                                    </button>
-                                    <div className="bg-white p-2 rounded-xl mt-6 mb-5 border-2 border-transparent shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden">
-                                        <img src="qrcode.png" alt="QR Code" className="w-40 h-40 object-contain" />
+
+                                    <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit">
+                                        <img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" />
                                     </div>
+
+                                    <div className="w-full mb-4">
+                                        <h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3>
+                                        <div className="h-[2px] w-full bg-[var(--neon)]"></div>
+                                    </div>
+
+                                    <div className="flex flex-col space-y-3 mb-6">
+                                        <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]">
+                                            <span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span>
+                                            <span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span>
+                                        </button>
+                                        <button onClick={() => btnClick(() => window.location.href='tips.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]">
+                                            <span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">SECRET PRE-MATCH TIPS</span>
+                                            <span className="font-kanit-regular text-[10px] leading-tight mt-0.5">เคล็ดลับก่อนการแข่งขัน</span>
+                                        </button>
+                                    </div>
+
                                     <div className="w-full border-t border-[#333] pt-4 text-center">
                                         <p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p>
-                                        <a href="mailto:bb3company@gmail.com" className="text-neon font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a>
+                                        <a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a>
                                     </div>
                                 </div>
                             )}
@@ -708,10 +727,8 @@
                 return (
                     <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
                         
-                        {/* 🌟 เปลี่ยน items-start เป็น items-center เพื่อจัดกึ่งกลางระดับเดียวกันทั้งหมด */}
                         <div className="flex justify-between items-center w-full pt-2 flex-shrink-0">
                             <div className="w-24 flex justify-start items-center">
-                                {/* 🌟 เปลี่ยนจากคำว่า SHARE แถวเดียว เป็น TIPS & SHARE สองแถว พร้อมปรับฟอนต์และสีตามบรีฟ */}
                                 <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex flex-col items-center justify-center leading-[0.9]">
                                     <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">TIPS &</span>
                                     <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">SHARE</span>
@@ -881,12 +898,11 @@
                                 <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
                                     <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
                                     
-                                    {/* 🌟 สร้างหน้าปัด 12 ขีดแบบคลาสสิก */}
                                     {Array.from({ length: 12 }).map((_, i) => {
-                                        const isMajor = i % 3 === 0; // ตำแหน่ง 12, 3, 6, 9
+                                        const isMajor = i % 3 === 0; 
                                         const angle = (i * 30) * (Math.PI / 180);
-                                        const r1 = isMajor ? 122 : 126; // ความยาวด้านใน (ขีดหลักจะยาวกว่า)
-                                        const r2 = 132; // ขอบด้านนอก
+                                        const r1 = isMajor ? 122 : 126; 
+                                        const r2 = 132; 
                                         return (
                                             <line
                                                 key={`tick-${i}`}
@@ -906,7 +922,6 @@
                                 </svg>
                                 
                                 <div className="absolute text-center z-10 translate-y-1">
-                                    {/* 🌟 ฟอนต์ Bebas Neue ขนาด 52px และนำขีด - ซ้ายขวาออก */}
                                     <span ref={timeTextRef} className="text-white font-bebas tabular-nums" style={{ fontSize: '52px', letterSpacing: '0.04em' }}>{formatTime(finalTime, 'colon')}</span>
                                 </div>
                             </div>
