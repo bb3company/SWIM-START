@@ -290,6 +290,7 @@
                 const gain = ctx.createGain(); 
                 osc.type = 'square'; 
                 osc.frequency.setValueAtTime(1000, ctx.currentTime); 
+                // 🌟 ความดังปรับไว้ที่ 1.5 ตามที่ตกลงกันไว้ครับ
                 gain.gain.setValueAtTime(1.5, ctx.currentTime); 
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
                 osc.connect(gain); 
@@ -300,7 +301,6 @@
 
             const btnClick = (callback) => { triggerVibrate(); playClickSound(); if (callback) callback(); };
 
-            // 🌟 แก้ไขลอจิกการกดปุ่ม Install เพื่อรองรับ Android กรณีที่ Prompt ไม่เด้ง
             const handleInstallClick = () => {
                 btnClick();
                 if (isIOS) {
@@ -311,7 +311,6 @@
                         setDeferredPrompt(null);
                     });
                 } else {
-                    // หากเป็น Android แต่ไม่มี deferredPrompt (ติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ)
                     setPopupType('androidInstall'); 
                 }
             };
@@ -565,7 +564,6 @@
                                 <IcoClose />
                             </button>
 
-                            {/* 🌟 หน้าต่าง Popup สำหรับ Android */}
                             {popupType === 'androidInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>more_vert</span>
@@ -710,10 +708,13 @@
                 return (
                     <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
                         
-                        <div className="flex justify-between items-start w-full pt-2 flex-shrink-0">
-                            <div className="w-24 h-8 flex justify-start items-center">
-                                <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex items-center h-full">
-                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[12px] tracking-widest">SHARE</span>
+                        {/* 🌟 เปลี่ยน items-start เป็น items-center เพื่อจัดกึ่งกลางระดับเดียวกันทั้งหมด */}
+                        <div className="flex justify-between items-center w-full pt-2 flex-shrink-0">
+                            <div className="w-24 flex justify-start items-center">
+                                {/* 🌟 เปลี่ยนจากคำว่า SHARE แถวเดียว เป็น TIPS & SHARE สองแถว พร้อมปรับฟอนต์และสีตามบรีฟ */}
+                                <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex flex-col items-center justify-center leading-[0.9]">
+                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">TIPS &</span>
+                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">SHARE</span>
                                 </div>
                             </div>
                             
@@ -727,7 +728,7 @@
                                 <span className={`font-sg-light tracking-widest uppercase ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '10px'}}>STOPWATCH</span>
                             </div>
 
-                            <div className="w-24 h-8 flex justify-end items-center">
+                            <div className="w-24 flex justify-end items-center">
                                 <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>
                                     {isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}
                                 </button>
