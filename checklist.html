@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Race Day Checklist</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@300;400;500;600;700&family=Montserrat:wght@400;500;700&family=Science+Gothic:wdth,wght@125,300;125,400;125,500;125,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+    <style>
+        :root { --neon: #C8FF00; --bg-dark: #050505; }
+        body { background-color: var(--bg-dark); color: white; -webkit-user-select: none; user-select: none; overflow: hidden; touch-action: pan-y; }
+        .text-neon { color: var(--neon); }
+        .bg-neon { background-color: var(--neon); }
+        .border-neon { border-color: var(--neon); }
+        .font-sg-bold { font-family: 'Science Gothic', sans-serif; font-stretch: 125%; font-weight: 700; }
+        .font-mont-bold { font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        .font-kanit { font-family: 'Kanit', sans-serif; }
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: 0.05em; }
+        .btn-press:active { transform: scale(0.95); transition: 0.05s; }
+        
+        .check-box {
+            width: 26px; height: 26px; border: 2px solid #444; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .check-box.checked { 
+            background-color: var(--neon); 
+            border-color: var(--neon); 
+            box-shadow: 0 0 10px rgba(200,255,0,0.4);
+            transform: scale(1.05);
+        }
+        .check-box.checked::after { content: "✓"; color: black; font-weight: 900; font-size: 16px; }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes pulse-neon {
+            0%, 100% { box-shadow: 0 0 15px rgba(200, 255, 0, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(200, 255, 0, 0.8); }
+        }
+        .animate-glow { animation: pulse-neon 2s infinite ease-in-out; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [lang, setLang] = useState('th');
+            
+            // โหลดข้อมูลเก่าจากเครื่อง
+            const [checklist, setChecklist] = useState(() => {
+                const saved = localStorage.getItem('swimstart_checklist');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            // บันทึกข้อมูลลงเครื่องอัตโนมัติเมื่อมีการเปลี่ยนแปลง
+            useEffect(() => { 
+                localStorage.setItem('swimstart_checklist', JSON.stringify(checklist)); 
+            }, [checklist]);
+
+            const t = (th, en) => lang === 'th' ? th : en;
+
+            const toggleCheck = (id) => {
+                if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(40); } catch(e) {} }
+                setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
+            };
+
+            const clearChecklist = () => {
+                const msg = lang === 'th' ? 'ต้องการล้างข้อมูลเช็คลิสต์ทั้งหมดใช่ไหม?' : 'Clear all checklist data?';
+                if(confirm(msg)) { 
+                    setChecklist({}); 
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate([100, 50, 100]); } catch(e) {} }
+                }
+            };
+
+            const goBack = () => {
+                if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(40); } catch(e) {} }
+                window.history.back();
+            };
+
+            const CheckItem = ({ id, labelTH, labelEN }) => (
+                <div onClick={() => toggleCheck(id)} className={`flex items-center space-x-3 p-3.5 rounded-xl border mb-2 cursor-pointer btn-press transition-colors duration-300 ${checklist[id] ? 'bg-[#151515] border-[#333]' : 'bg-[#0a0a0a] border-[#222]'}`}>
+                    <div className={`check-box flex-shrink-0 ${checklist[id] ? 'checked' : ''}`}></div>
+                    <span className={`font-kanit text-sm leading-snug transition-all duration-300 ${checklist[id] ? 'text-[#666] line-through decoration-[#444]' : 'text-[#eee]'}`}>{t(labelTH, labelEN)}</span>
+                </div>
+            );
+
+            // รายชื่อ ID อุปกรณ์ทั้งหมดสำหรับคำนวณ Progress Bar
+            const allItems = [
+                "gear_suit", "gear_suit_backup", "gear_goggles", "gear_cap",
+                "body_parka", "body_towel", "body_shoes", "body_clothes",
+                "fuel_water", "fuel_electro", "fuel_food", "fuel_snack",
+                "misc_id", "misc_program", "misc_bag", "misc_shower", "misc_sunblock",
+                "parent_chair", "parent_fan", "parent_ice", "parent_power", "parent_pen"
+            ];
+
+            const totalItems = allItems.length;
+            const checkedCount = allItems.filter(id => checklist[id]).length;
+            const progressPercent = Math.round((checkedCount / totalItems) * 100);
+            const isFullyReady = progressPercent === 100;
+
+            return (
+                <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col bg-[#050505] relative font-kanit">
+                    
+                    {/* Top Bar (Header) */}
+                    <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[#222] bg-[#050505] z-20 flex-shrink-0">
+                        <button onClick={goBack} className="text-white btn-press flex items-center justify-center w-8 h-8 bg-[#222] rounded-full">
+                            <span className="material-symbols-outlined" style={{fontSize: '20px'}}>arrow_back_ios_new</span>
+                        </button>
+                        <div className="flex flex-col items-center">
+                            <h1 className="text-[var(--neon)] font-sg-bold uppercase text-lg tracking-widest leading-none">CHECKLIST</h1>
+                            <span className="text-[#888] font-mont-bold text-[9px] uppercase tracking-widest mt-1">{t('เตรียมของวันแข่ง', 'Race Day Gear')}</span>
+                        </div>
+                        <div className="flex space-x-1.5 bg-[#222] p-1 rounded-md">
+                            <button onClick={() => setLang('th')} className={`font-mont-bold text-[10px] px-1.5 py-0.5 rounded transition-all ${lang === 'th' ? 'bg-neon text-black' : 'text-[#888]'}`}>TH</button>
+                            <button onClick={() => setLang('en')} className={`font-mont-bold text-[10px] px-1.5 py-0.5 rounded transition-all ${lang === 'en' ? 'bg-neon text-black' : 'text-[#888]'}`}>EN</button>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar Section (Sticky) */}
+                    <div className="px-5 pt-4 pb-4 bg-gradient-to-b from-[#050505] to-[#0a0a0a] border-b border-[#111] z-10 flex-shrink-0 shadow-md">
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="flex flex-col">
+                                <span className={`font-sg-bold uppercase text-sm tracking-wider ${isFullyReady ? 'text-[var(--neon)]' : 'text-white'}`}>
+                                    {isFullyReady ? t('พร้อมแข่ง 100%!', '100% READY TO RACE!') : t('สถานะการเตรียมของ', 'Preparation Status')}
+                                </span>
+                                {!isFullyReady && <span className="text-[#666] text-[10px] leading-none mt-1">{t('ติ๊กให้ครบก่อนออกจากบ้าน', 'Check all before leaving')}</span>}
+                            </div>
+                            <div className="flex items-baseline space-x-1">
+                                <span className={`font-bebas text-3xl leading-none ${isFullyReady ? 'text-[var(--neon)]' : 'text-white'}`}>{checkedCount}</span>
+                                <span className="font-bebas text-xl leading-none text-[#666]">/{totalItems}</span>
+                            </div>
+                        </div>
+                        <div className="w-full h-3.5 bg-[#222] rounded-full overflow-hidden border border-[#333]">
+                            <div 
+                                className={`h-full transition-all duration-500 ease-out ${isFullyReady ? 'bg-[var(--neon)] animate-glow' : 'bg-[var(--neon)] opacity-80'}`} 
+                                style={{ width: `${progressPercent}%` }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    {/* Content Scroll Area */}
+                    <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scroll">
+                        
+                        {/* หมวดหมู่ 1: อุปกรณ์ลงสระ */}
+                        <div className="mb-6">
+                            <h3 className="text-[var(--neon)] text-xs font-bold mb-3 uppercase tracking-wider pl-1 flex items-center">
+                                <span className="text-base mr-2">🩱</span> {t('อุปกรณ์ลงสระ (Race Gear)', 'Race Gear')}
+                            </h3>
+                            <CheckItem id="gear_suit" labelTH="ชุดว่ายน้ำตัวเก่ง / ชุดแข่ง (Tech Suit)" labelEN="Main Swimsuit / Tech Suit" />
+                            <CheckItem id="gear_suit_backup" labelTH="ชุดว่ายน้ำสำรอง (กันขาดหรือซิปแตก)" labelEN="Backup Swimsuit" />
+                            <CheckItem id="gear_goggles" labelTH="แว่นตาว่ายน้ำ (อย่างน้อย 2 อัน)" labelEN="Goggles (at least 2 pairs)" />
+                            <CheckItem id="gear_cap" labelTH="หมวกว่ายน้ำ (อย่างน้อย 2 ใบ)" labelEN="Swim Cap (at least 2 caps)" />
+                        </div>
+
+                        {/* หมวดหมู่ 2: อุปกรณ์รักษาร่างกาย */}
+                        <div className="mb-6">
+                            <h3 className="text-[#63B3ED] text-xs font-bold mb-3 uppercase tracking-wider pl-1 flex items-center">
+                                <span className="text-base mr-2">🧥</span> {t('อุปกรณ์รักษาร่างกาย', 'Body Care & Warmth')}
+                            </h3>
+                            <CheckItem id="body_parka" labelTH="เสื้อคลุมนักกีฬา (Parka) / เสื้อกันหนาว" labelEN="Swim Parka / Warm Jacket" />
+                            <CheckItem id="body_towel" labelTH="ผ้าเช็ดตัวใหญ่ 2-3 ผืน / ผ้าชามัวร์" labelEN="Towels (2-3) / Chamois" />
+                            <CheckItem id="body_shoes" labelTH="รองเท้าแตะ (กันลื่นและเชื้อโรค)" labelEN="Sandals / Flip-flops" />
+                            <CheckItem id="body_clothes" labelTH="เสื้อผ้าแห้งและชุดชั้นในเปลี่ยนกลับ" labelEN="Dry clothes & underwear for going home" />
+                        </div>
+
+                        {/* หมวดหมู่ 3: โภชนาการ */}
+                        <div className="mb-6">
+                            <h3 className="text-[#F6AD55] text-xs font-bold mb-3 uppercase tracking-wider pl-1 flex items-center">
+                                <span className="text-base mr-2">🍌</span> {t('โภชนาการ (Fuel & Hydration)', 'Fuel & Hydration')}
+                            </h3>
+                            <CheckItem id="fuel_water" labelTH="กระบอกน้ำดื่มส่วนตัว (สำคัญมาก!)" labelEN="Personal Water Bottle (Crucial!)" />
+                            <CheckItem id="fuel_electro" labelTH="เกลือแร่ (Electrolytes)" labelEN="Electrolytes" />
+                            <CheckItem id="fuel_food" labelTH="ไข่ต้ม, ขนมปัง, กล้วย" labelEN="Boiled egg, Bread, Banana" />
+                            <CheckItem id="fuel_snack" labelTH="สแน็ค: นมช็อกโกแลต, Energy Bar, เยลลี่" labelEN="Snacks: Choc Milk, Energy Bar, Jelly" />
+                        </div>
+
+                        {/* หมวดหมู่ 4: ของใช้จิปาถะ */}
+                        <div className="mb-6">
+                            <h3 className="text-[#B794F4] text-xs font-bold mb-3 uppercase tracking-wider pl-1 flex items-center">
+                                <span className="text-base mr-2">🎒</span> {t('ของใช้จิปาถะ', 'Miscellaneous')}
+                            </h3>
+                            <CheckItem id="misc_id" labelTH="บัตรประจำตัวนักกีฬา / บัตร ปชช." labelEN="Athlete ID / Identity Card" />
+                            <CheckItem id="misc_program" labelTH="สูจิบัตร / ตารางแข่ง (เช็ค Heat/Lane)" labelEN="Race Program (Check Heat/Lane)" />
+                            <CheckItem id="misc_bag" labelTH="ถุงพลาสติก หรือ Wet Bag ใส่ของเปียก" labelEN="Plastic/Wet Bag for wet gear" />
+                            <CheckItem id="misc_shower" labelTH="แชมพู / สบู่ สำหรับอาบน้ำ" labelEN="Shampoo / Soap for shower" />
+                            <CheckItem id="misc_sunblock" labelTH="ครีมกันแดด (กรณีแข่งสระเปิด)" labelEN="Sunscreen (for open-air pools)" />
+                        </div>
+
+                        {/* หมวดหมู่ 5: Parent Survival Gear */}
+                        <div className="mb-8 p-4 rounded-2xl bg-[#110a0a] border border-[#331a1a]">
+                            <h3 className="text-[#F56565] text-xs font-bold mb-3 uppercase tracking-wider pl-1 flex items-center">
+                                <span className="text-base mr-2">🏕️</span> Parent Survival Gear
+                            </h3>
+                            <CheckItem id="parent_chair" labelTH="เก้าอี้สนามพับได้ / เสื่อปูนั่ง" labelEN="Camping Chair / Mat" />
+                            <CheckItem id="parent_fan" labelTH="ร่ม / พัดลมพกพา (สระเปิดร้อนมาก)" labelEN="Umbrella / Portable Fan" />
+                            <CheckItem id="parent_ice" labelTH="กระติกน้ำแข็งใบเล็ก (แช่น้ำ/ผ้าเย็น)" labelEN="Small Ice Cooler" />
+                            <CheckItem id="parent_power" labelTH="พาวเวอร์แบงค์ (ถ่ายคลิปแบตหมดไว)" labelEN="Powerbank" />
+                            <CheckItem id="parent_pen" labelTH="ปากกาเคมี (เขียน Heat/Lane บนแขน)" labelEN="Sharpie Marker (Write Heat/Lane on arm)" />
+                        </div>
+
+                        {/* ปุ่ม Reset ด้านล่างสุด */}
+                        <div className="flex justify-center mt-2 mb-10">
+                            <button onClick={clearChecklist} className="flex items-center space-x-2 text-[#ff3b30] border border-[#ff3b30]/50 bg-[#ff3b30]/10 px-5 py-2.5 rounded-full font-sg-bold text-xs tracking-widest uppercase btn-press transition-colors">
+                                <span className="material-symbols-outlined" style={{fontSize: '16px'}}>restart_alt</span>
+                                <span>{t('รีเซ็ตข้อมูลทั้งหมด', 'RESET ALL DATA')}</span>
+                            </button>
+                        </div>
+                        
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -48,7 +48,7 @@
             scroll-snap-align: start;
             scroll-snap-stop: always;
             overflow-y: auto;
-            overflow-x: hidden; /* 🌟 แก้ปัญหาหน้าขยับซ้ายขวา และสไลด์ 2 ครั้ง */
+            overflow-x: hidden; 
             padding-bottom: 60px;
         }
         
@@ -72,7 +72,7 @@
         .cover-content {
             position: relative;
             z-index: 2;
-            width: 100%; /* บังคับไม่ให้ล้นขอบจอ */
+            width: 100%; 
         }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -90,7 +90,8 @@
             const [lang, setLang] = useState('th');
             const scrollContainerRef = useRef(null);
             
-            const totalPages = 7; 
+            // 🌟 เพิ่มเป็น 9 หน้า (หน้าปก 2 + เนื้อหา 5 + รูปเทคนิค 2)
+            const totalPages = 9; 
 
             const t = (th, en) => lang === 'th' ? th : en;
 
@@ -306,7 +307,6 @@
                                     <div className="w-16 h-16 bg-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(59,130,246,0.4)]">
                                         <span className="material-symbols-outlined text-white" style={{fontSize: '36px'}}>pool</span>
                                     </div>
-                                    {/* 🌟 ปรับขนาดฟอนต์ให้รองรับจอเล็กแบบพอดี ไม่ทะลุขอบแน่นอน */}
                                     <h1 className="font-sg-bold text-white uppercase leading-[0.9] tracking-wider mb-2" style={{ fontSize: 'min(38px, 10vw)' }}>RACE</h1>
                                     <h1 className="font-sg-bold text-[#60A5FA] uppercase leading-[0.9] tracking-wider mb-6" style={{ fontSize: 'min(36px, 9.5vw)' }}>PROCEDURE</h1>
                                     <p className="text-[#93C5FD] font-kanit text-sm tracking-wide border-t border-b border-[#1E3A8A] py-2 px-2 mb-10">
@@ -423,6 +423,24 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* ================= PAGE 7 (TECHNIQUE 1) ================= */}
+                            <div className="swipe-page px-5 pt-4 hide-scroll flex flex-col items-center">
+                                <div className="flex items-center space-x-2 w-full mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-[#1A365D] flex items-center justify-center text-[var(--neon)]"><span className="material-symbols-outlined">lightbulb</span></div>
+                                    <h2 className="text-white font-bold text-lg leading-tight">{t('เทคนิคเพิ่มเติม 1', 'Bonus Technique 1')}</h2>
+                                </div>
+                                <img src="tech1.jpg" alt="Technique 1" className="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(200,255,0,0.2)] border border-[#333] object-cover" />
+                            </div>
+
+                            {/* ================= PAGE 8 (TECHNIQUE 2) ================= */}
+                            <div className="swipe-page px-5 pt-4 hide-scroll flex flex-col items-center">
+                                <div className="flex items-center space-x-2 w-full mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-[#1A365D] flex items-center justify-center text-[var(--neon)]"><span className="material-symbols-outlined">lightbulb</span></div>
+                                    <h2 className="text-white font-bold text-lg leading-tight">{t('เทคนิคเพิ่มเติม 2', 'Bonus Technique 2')}</h2>
+                                </div>
+                                <img src="tech2.jpg" alt="Technique 2" className="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(200,255,0,0.2)] border border-[#333] object-cover" />
                             </div>
 
                         </div>
