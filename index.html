@@ -50,6 +50,8 @@
         .font-kanit-regular { font-family: 'Kanit', sans-serif; font-weight: 400; }
         .font-bebas { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
         .tabular-nums { font-variant-numeric: tabular-nums; }
+        .mode-card { border: 2px solid #333; border-radius: 12px; background: transparent; transition: all 0.2s; }
+        .mode-card.active { border-color: var(--neon); background-color: rgba(200, 255, 0, 0.03); box-shadow: inset 0 0 20px rgba(200, 255, 0, 0.05); }
         .btn-press:active { transform: scale(0.95); transition: 0.05s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
@@ -136,8 +138,11 @@
 
             const [screen, setScreen] = useState('menu');
             const [selectedMode, setSelectedMode] = useState(null); 
+            
+            // 🌟 States สำหรับการจัดหน้าหมวดหมู่
             const [currentPage, setCurrentPage] = useState(0); 
             const modeTitles = ["DIVE MODE", "TRAINING MODE", "PREP MODE"];
+            const [touchStartPos, setTouchStartPos] = useState(null);
 
             const [isStopwatchOn, setIsStopwatchOn] = useState(() => { const saved = localStorage.getItem('isStopwatchOn'); return saved !== null ? JSON.parse(saved) : false; });
             const [isUiMuted, setIsUiMuted] = useState(() => { const saved = localStorage.getItem('isUiMuted'); return saved !== null ? JSON.parse(saved) : false; });
@@ -149,11 +154,11 @@
             
             const [isCooldown, setIsCooldown] = useState(false);
 
-            // States สำหรับโหมด Manual
+            // 🌟 States สำหรับโหมด Manual
             const [isWaitingManual, setIsWaitingManual] = useState(false);
             const manualResolveRef = useRef(null);
 
-            // States สำหรับโหมด Reflex Body
+            // 🌟 States สำหรับโหมด Reflex Body
             const [reflexState, setReflexState] = useState('init'); 
             const [reflexTime, setReflexTime] = useState(0);
             const reflexTimerRef = useRef(null);
@@ -176,7 +181,6 @@
             const [copyText, setCopyText] = useState('COPY URL'); 
             const [copyBuyText, setCopyBuyText] = useState('COPY ข้อความสั่งซื้อ');
             
-            const [touchStartPos, setTouchStartPos] = useState(null);
             const cancelRef = useRef(false);
             const timeTextRef = useRef(null);
             const ringCircleRef = useRef(null);
@@ -288,6 +292,7 @@
             const isWarning = daysLeft !== null && daysLeft <= 7;
 
             const triggerVibrate = () => { if (typeof navigator !== 'undefined' && navigator.vibrate) try { navigator.vibrate(40); } catch(e) {} };
+            
             const playClickSound = () => {
                 if (isUiMuted) return; 
                 const ctx = getAudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
@@ -296,55 +301,20 @@
                 osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05);
             };
             
-            // ระบบเสียง Multi-tone นกหวีด
-            const playWhistle = (duration) => {
-                if (cancelRef.current) return; 
+            // 🌟 แก้ไข: นำ playEndBeep กลับคืนมาให้ระบบจับเวลาสมบูรณ์ 100%
+            const playEndBeep = () => {
+                if (isUiMuted || cancelRef.current) return; 
                 const ctx = getAudioContext(); 
-                const freqs = [2750, 2850, 2960, 3200, 3800]; 
-                const masterGain = ctx.createGain(); 
-                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
-                masterGain.connect(ctx.destination);
-                
-                freqs.forEach(f => { 
-                    const osc = ctx.createOscillator(); 
-                    const gain = ctx.createGain(); 
-                    osc.type = 'sine'; 
-                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
-                    gain.gain.setValueAtTime(0, ctx.currentTime); 
-                    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02); 
-                    gain.gain.setValueAtTime(0.25, ctx.currentTime + duration - 0.05); 
-                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration); 
-                    osc.connect(gain); 
-                    gain.connect(masterGain); 
-                    osc.start(); 
-                    osc.stop(ctx.currentTime + duration); 
-                });
-            };
-            
-            // ระบบเสียง Multi-tone BEEP
-            const playBeep = () => {
-                if (cancelRef.current) return; 
-                const ctx = getAudioContext(); 
-                const duration = 0.55; 
-                const freqs = [1000, 1800, 2600];
-                const masterGain = ctx.createGain(); 
-                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
-                masterGain.connect(ctx.destination);
-                
-                freqs.forEach(f => { 
-                    const osc = ctx.createOscillator(); 
-                    const gain = ctx.createGain(); 
-                    osc.type = 'square'; 
-                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
-                    gain.gain.setValueAtTime(0, ctx.currentTime); 
-                    gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01); 
-                    gain.gain.setValueAtTime(0.4, ctx.currentTime + duration - 0.1); 
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration); 
-                    osc.connect(gain); 
-                    gain.connect(masterGain); 
-                    osc.start(); 
-                    osc.stop(ctx.currentTime + duration); 
-                });
+                const osc = ctx.createOscillator(); 
+                const gain = ctx.createGain(); 
+                osc.type = 'square'; 
+                osc.frequency.setValueAtTime(1000, ctx.currentTime); 
+                gain.gain.setValueAtTime(1.5, ctx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
+                osc.connect(gain); 
+                gain.connect(ctx.destination); 
+                osc.start(); 
+                osc.stop(ctx.currentTime + 0.6);
             };
 
             const btnClick = (callback) => { triggerVibrate(); playClickSound(); if (callback) callback(); };
@@ -439,7 +409,6 @@
                 return format === 'colon' ? `${m}:${s}:${c}` : `${m}.${s}.${c}`;
             };
 
-            // 🌟 ปรับแก้บักสำหรับ STOPWATCH ตรง: ตรวจสอบโหมดเวลาสั่งกดปุ่ม START/STOP
             const handleStopwatchAction = (action) => {
                 if (!isStopwatchRunning || isCooldown) return; 
                 
@@ -495,6 +464,56 @@
             const deleteSavedName = (nameToDelete, e) => { e.stopPropagation(); btnClick(); const updatedList = savedNames.filter(n => n !== nameToDelete); setSavedNames(updatedList); localStorage.setItem('swimmerNamesList', JSON.stringify(updatedList)); const updatedLanes = { ...lanes }; for (let i = 1; i <= 5; i++) { if (updatedLanes[i] === nameToDelete) updatedLanes[i] = ''; } setLanes(updatedLanes); };
             const clearCurrentLane = () => { setLanes(prev => ({ ...prev, [activeLaneModal]: '' })); setActiveLaneModal(null); setTempInputName(''); };
 
+            // 🌟 เสียง Multi-Tone อัปเกรดความดุดัน ทะลุสระ
+            const playWhistle = (duration) => {
+                if (cancelRef.current) return; 
+                const ctx = getAudioContext(); 
+                const freqs = [2750, 2850, 2960, 3200, 3800]; 
+                const masterGain = ctx.createGain(); 
+                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
+                masterGain.connect(ctx.destination);
+                
+                freqs.forEach(f => { 
+                    const osc = ctx.createOscillator(); 
+                    const gain = ctx.createGain(); 
+                    osc.type = 'sine'; 
+                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
+                    gain.gain.setValueAtTime(0, ctx.currentTime); 
+                    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02); 
+                    gain.gain.setValueAtTime(0.25, ctx.currentTime + duration - 0.05); 
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration); 
+                    osc.connect(gain); 
+                    gain.connect(masterGain); 
+                    osc.start(); 
+                    osc.stop(ctx.currentTime + duration); 
+                });
+            };
+            
+            const playBeep = () => {
+                if (cancelRef.current) return; 
+                const ctx = getAudioContext(); 
+                const duration = 0.55; 
+                const freqs = [1000, 1800, 2600];
+                const masterGain = ctx.createGain(); 
+                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
+                masterGain.connect(ctx.destination);
+                
+                freqs.forEach(f => { 
+                    const osc = ctx.createOscillator(); 
+                    const gain = ctx.createGain(); 
+                    osc.type = 'square'; 
+                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
+                    gain.gain.setValueAtTime(0, ctx.currentTime); 
+                    gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01); 
+                    gain.gain.setValueAtTime(0.4, ctx.currentTime + duration - 0.1); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration); 
+                    osc.connect(gain); 
+                    gain.connect(masterGain); 
+                    osc.start(); 
+                    osc.stop(ctx.currentTime + duration); 
+                });
+            };
+
             const speak = (text, lang = 'en-US', rate = 0.85, forceMale = false) => {
                 return new Promise((resolve) => {
                     if (cancelRef.current || !window.speechSynthesis) return setTimeout(resolve, 1500);
@@ -528,6 +547,7 @@
                 }
             };
 
+            // 🌟 จัดการการเริ่ม Mode ต่างๆ อย่างถูกต้อง
             const handleMainStartClick = () => { 
                 if (!selectedMode) return; 
                 btnClick(() => { 
@@ -688,24 +708,16 @@
                 </svg>
             );
 
-            // 🌟 ปรับ Layout กรอบการ์ดให้ตรงกราฟิกเป๊ะ (แนวตั้ง/กรอบเส้น/ฟอนต์)
+            // 🌟 1. กู้คืนคลาสของ ModeCard เดิม 100% ให้กลับมาสวยเหมือนเดิม (ตาม index_4)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
                 return (
-                    <div onClick={() => handleModeSelection(id)} className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl border-[2px] transition-all cursor-pointer relative ${isActive ? 'border-[var(--neon)] bg-[rgba(200,255,0,0.03)] shadow-[inset_0_0_15px_rgba(200,255,0,0.05)]' : 'border-[#333] bg-transparent'}`} style={{ height: '145px' }}>
+                    <div onClick={() => handleModeSelection(id)} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative ${isActive ? 'active' : ''}`}>
                         {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
-                        
-                        <div className="mb-2 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
-                        
-                        <div className={`font-sg-bold text-center flex flex-col uppercase leading-[1] mb-2 flex-shrink-0 ${isActive ? 'text-[var(--neon)]' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '15px', letterSpacing: '0.05em' }}>
-                            <span>{title1}</span>
-                            <span>{title2}</span>
-                        </div>
-                        
-                        <div className={`font-mont-medium text-center leading-tight flex-shrink-0 px-1 ${isActive ? 'text-white' : 'text-[#666]'}`} style={{ fontSize: '10px' }}>
-                            {desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}
-                        </div>
+                        <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
+                        <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '16px' }}><span>{title1}</span><span>{title2}</span></div>
+                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
                     </div>
                 );
             };
@@ -783,6 +795,7 @@
                                     <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit"><img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" /></div>
                                     <div className="w-full mb-4"><h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3><div className="h-[2px] w-full bg-[var(--neon)]"></div></div>
                                     <div className="flex flex-col space-y-3 mb-6">
+                                        {/* เอาปุ่ม Pre-match tips ออกจากตรงนี้ตามที่สั่งแล้วครับ */}
                                         <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]"><span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span><span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span></button>
                                     </div>
                                     <div className="w-full border-t border-[#333] pt-4 text-center"><p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p><a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a></div>
@@ -793,7 +806,6 @@
                 );
             };
 
-            // 🌟 1. เรนเดอร์ขณะกำลังโหลด Auth
             if (authLoading) {
                 return (
                     <div className="h-dvh w-full flex items-center justify-center bg-[#050505]">
@@ -802,7 +814,6 @@
                 );
             }
 
-            // 🌟 2. เรนเดอร์หน้าจอ Reflex Body
             if (screen === 'reflex') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
@@ -836,7 +847,6 @@
                 );
             }
 
-            // 🌟 3. เรนเดอร์หน้าจอ Setup (ก่อนปล่อยตัว)
             if (screen === 'setup') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col p-5 bg-[#050505]">
@@ -876,7 +886,6 @@
                 );
             }
 
-            // 🌟 4. เรนเดอร์หน้าจอ Stopwatch ตรงๆ
             if (screen === 'stopwatch') {
                 return (
                     <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-4 pb-6 bg-[#050505] relative">
@@ -915,11 +924,11 @@
                                     <span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>START</span>
                                 </button>
                             ) : (
-                                // 🌟 แก้บั๊กหน้า STOPWATCH เปล่า: เช็ค selectedMode ว่าเป็นโหมดอะไรเพื่อสั่งเริ่มถูกฟังก์ชัน
                                 <button onClick={() => btnClick(() => { 
                                     if (isStopwatchRunning) { 
                                         handleStopwatchAction('stop'); 
                                     } else { 
+                                        // 🌟 แยกฟังก์ชันให้เข้ากับการทำงานของ Direct Stopwatch
                                         if (selectedMode === 'direct_stopwatch') {
                                             raceStartTime.current = Date.now();
                                             setIsStopwatchRunning(true);
@@ -971,7 +980,6 @@
                 );
             }
 
-            // 🌟 5. เรนเดอร์หน้าจอ Running (กำลังปล่อยตัว)
             if (screen === 'running') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
@@ -1010,7 +1018,7 @@
                 );
             }
 
-            // 🌟 6. Default Render: หน้า Menu หลัก
+            // 🌟 5. เรนเดอร์หน้า Menu (มีระบบ Swipe เปลี่ยนหน้าแบบเต็มกล่อง และ UI ตรงปก 100%)
             return (
                 <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
                     
@@ -1071,23 +1079,23 @@
                         </div>
                     )}
 
-                    {/* 🌟 ขยับ Hero Image และ DIVE MODE ให้ชิดกันมากขึ้น */}
+                    {/* ขยับกรอบโหมดขึ้นไปชิดกับ Hero Image ตามภาพตัวอย่าง */}
                     <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] mt-2 mb-3 min-h-[120px]">
                         <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
                     </div>
 
+                    {/* 🌟 บริเวณที่สามารถปัดนิ้วเพื่อเปลี่ยนหน้าจอ (ครอบคลุมทั้งพื้นที่) */}
                     <div 
                         onTouchStart={(e) => setTouchStartPos(e.targetTouches[0].clientX)}
                         onTouchEnd={(e) => {
                             if (!touchStartPos) return;
                             const touchEnd = e.changedTouches[0].clientX;
-                            if (touchStartPos - touchEnd > 50) { btnClick(); setCurrentPage(p => Math.min(2, p + 1)); setSelectedMode(null); }
-                            if (touchStartPos - touchEnd < -50) { btnClick(); setCurrentPage(p => Math.max(0, p - 1)); setSelectedMode(null); }
+                            if (touchStartPos - touchEnd > 40) { setCurrentPage(p => Math.min(2, p + 1)); setSelectedMode(null); }
+                            if (touchStartPos - touchEnd < -40) { setCurrentPage(p => Math.max(0, p - 1)); setSelectedMode(null); }
                             setTouchStartPos(null);
                         }}
                         className="w-full flex flex-col"
                     >
-                        {/* 🌟 Header DIVE MODE ตามแบบ */}
                         <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
                             <span className="text-[var(--neon)] font-sg-bold uppercase tracking-widest" style={{ fontSize: '15px' }}>{modeTitles[currentPage]}</span>
@@ -1106,7 +1114,8 @@
                                 <>
                                     <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\ncontrol." isProOnly={true} />
                                     <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction time\ntraining." isProOnly={true} />
-                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOPWATCH" title2="" desc="Manual timing\nmode." isProOnly={true} />
+                                    {/* แบ่งบรรทัด STOPWATCH เป็น 2 บรรทัด */}
+                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOP" title2="WATCH" desc="Manual timing\nmode." isProOnly={true} />
                                 </>
                             )}
                             {currentPage === 2 && (
@@ -1118,8 +1127,8 @@
                             )}
                         </div>
 
-                        {/* 🌟 Pagination Dots ขีด/จุด ตามแบบกราฟิก */}
-                        <div className="flex justify-center items-center space-x-1.5 mt-3 mb-5">
+                        {/* 🌟 จุด Pagination ตรงตามภาพ (ขีดเขียว และจุดวงกลมเทา) */}
+                        <div className="flex justify-center items-center space-x-1.5 mt-3 mb-4">
                             {[0, 1, 2].map(idx => (
                                 <div 
                                     key={idx} 
@@ -1145,7 +1154,7 @@
                             )}
                             <button onClick={handleClearCache} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
                                 <span className="material-symbols-outlined" style={{fontSize: '14px'}}>sync</span>
-                                    <span>Update System</span>
+                                <span>Update System</span>
                             </button>
                         </div>
                         <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.0</span>
