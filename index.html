@@ -557,15 +557,12 @@
                         if (!isPro) setPopupType(user ? 'buy' : 'login');
                         else initReflexMode();
                     } else if (selectedMode === 'direct_stopwatch') {
-                        if (!isPro) setPopupType(user ? 'buy' : 'login');
-                        else {
-                            setScreen('stopwatch');
-                            checkAndClearLapHistory();
-                            setFinalTime(0);
-                            setIsNewSession(true);
-                            setIsStopwatchRunning(false);
-                        }
-                    } else if (selectedMode === 'pre_match') {
+    setScreen('stopwatch');
+    checkAndClearLapHistory();
+    setFinalTime(0);
+    setIsNewSession(true);
+    setIsStopwatchRunning(false);
+} else if (selectedMode === 'pre_match') {
                         window.location.href = 'tips.html';
                     } else if (selectedMode === 'check_list') {
                         window.location.href = 'checklist.html';
@@ -716,6 +713,7 @@
             const IcoClose = () => <span className="material-symbols-outlined" style={{fontSize: '28px'}}>close</span>;
             const IcoDelete = () => <span className="material-symbols-outlined" style={{fontSize: '24px'}}>delete</span>;
             const IcoQuick = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>bolt</span>;
+            const IcoSprint = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>sprint</span>;
             const IcoWhistle = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>sports</span>;
             const IcoTrophy = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>emoji_events</span>;
             const IcoHand = ({ active, size="36px", className="" }) => <span className={`material-symbols-outlined ${className}`} style={{ fontSize: size, color: active ? 'var(--neon)' : 'white' }}>front_hand</span>;
@@ -1140,8 +1138,8 @@
                             {currentPage === 1 && (
                                 <>
                                     <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\nmanual\ncontrol." isProOnly={true} />
-                                    <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction\ntime\ntraining." isProOnly={true} />
-                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOP" title2="WATCH" desc="Manual\ntiming\nmode." isProOnly={true} />
+                                    <ModeCard id="reflex" icon={IcoSprint} title1="REFLEX" title2="BODY" desc="Reaction\ntime\ntraining." isProOnly={true} />
+                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOP" title2="WATCH" desc="Manual\ntiming\nmode." isProOnly={false} />
                                 </>
                             )}
                             {currentPage === 2 && (
