@@ -646,9 +646,25 @@
                         if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
                         await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
                     } else if (selectedMode === 'ready' || selectedMode === 'manual') {
+                        
+                        let currentStyle = readyStyle;
+                        
                         if (selectedMode === 'manual' && manualType === 'announcer') {
-                            setStep(0); const evt = EVENTS.find(e => e.id === raceEvent); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); await sleep(500); checkCancel(); setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
-                            let laneText = ""; for (let i = 1; i <= 5; i++) { const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; } await speak(laneText, 'th-TH', 0.95); await sleep(1000); checkCancel();
+                            const evt = EVENTS.find(e => e.id === raceEvent);
+                            currentStyle = evt ? evt.style : 'freestyle';
+                            
+                            setStep(0); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); 
+                            await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); 
+                            await sleep(500); checkCancel(); 
+                            
+                            setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
+                            let laneText = ""; 
+                            for (let i = 1; i <= 5; i++) { 
+                                const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; 
+                                laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; 
+                            } 
+                            await speak(laneText, 'th-TH', 0.95); 
+                            await sleep(1000); checkCancel();
                             await waitForNext();
                         }
 
@@ -657,9 +673,11 @@
                         if (selectedMode === 'manual') await waitForNext(); else await sleep(Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000);
                         checkCancel();
 
-                        setStep(2); setStatusText('1 LONG WHISTLE'); setSubText(readyStyle === 'freestyle' ? 'STEP UP' : 'JUMP IN'); setSubTextTh(readyStyle === 'freestyle' ? 'ขึ้นแท่นสตาร์ท' : 'ลงสระ'); playWhistle(0.8); 
+                        setStep(2); setStatusText('1 LONG WHISTLE'); setSubText(currentStyle === 'freestyle' ? 'STEP UP' : 'JUMP IN'); setSubTextTh(currentStyle === 'freestyle' ? 'ขึ้นแท่นสตาร์ท' : 'ลงสระ'); playWhistle(0.8); 
                         if (selectedMode === 'manual') await waitForNext(); else await sleep(3500);
-                        if (readyStyle === 'backstroke') { checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); 
+                        
+                        if (currentStyle === 'backstroke') { 
+                            checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); 
                             if (selectedMode === 'manual') await waitForNext(); else await sleep(3500); 
                         } checkCancel();
 
@@ -670,6 +688,7 @@
                         setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
                         if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
                         await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
+                        
                     } else if (selectedMode === 'race') {
                         setStep(0); const evt = EVENTS.find(e => e.id === raceEvent); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); await sleep(500); checkCancel(); setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
                         let laneText = ""; for (let i = 1; i <= 5; i++) { const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; } await speak(laneText, 'th-TH', 0.95); await sleep(1000); checkCancel();
@@ -747,7 +766,7 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
@@ -909,7 +928,7 @@
                                 </div>
                             )}
 
-                            {(selectedMode === 'ready' || selectedMode === 'manual') && (
+                            {(selectedMode === 'ready' || (selectedMode === 'manual' && manualType === 'standard')) && (
                                 <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333] mb-4">
                                     <h3 className="text-neon font-sg-bold mb-4 text-center text-lg uppercase tracking-wider">STYLE SETUP</h3>
                                     <div className="flex flex-col space-y-3">
@@ -1063,13 +1082,25 @@
                             </div>
                             
                             {isWaitingManual ? (
-                                <button onClick={handleManualNext} className="w-full bg-[#FFEA00] text-black font-sg-expanded-medium text-2xl py-4 rounded-xl shadow-[0_0_15px_rgba(255,234,0,0.3)] flex items-center justify-center space-x-3 btn-press animate-pulse">
-                                    <span className="tracking-widest">NEXT STEP</span>
-                                </button>
+                                step === 3 ? (
+                                    <button onClick={handleManualNext} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-4xl py-4 rounded-xl shadow-[0_0_25px_rgba(200,255,0,0.5)] flex items-center justify-center space-x-3 btn-press animate-pulse border-2 border-white">
+                                        <span className="tracking-widest">GO</span>
+                                    </button>
+                                ) : (
+                                    <button onClick={handleManualNext} className="w-full bg-[#FFEA00] text-black font-sg-expanded-medium text-2xl py-4 rounded-xl shadow-[0_0_15px_rgba(255,234,0,0.3)] flex items-center justify-center space-x-3 btn-press animate-pulse">
+                                        <span className="tracking-widest">NEXT STEP</span>
+                                    </button>
+                                )
                             ) : (
-                                <button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press">
-                                    <div className="w-5 h-5 bg-black rounded-sm"></div><span className="tracking-widest">STOP</span>
-                                </button>
+                                selectedMode !== 'manual' ? (
+                                    <button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press">
+                                        <div className="w-5 h-5 bg-black rounded-sm"></div><span className="tracking-widest">STOP</span>
+                                    </button>
+                                ) : (
+                                    <div className="w-full h-[76px] flex items-center justify-center">
+                                        <span className="text-zinc-600 font-sg-bold uppercase text-xs tracking-widest animate-pulse">PLAYING...</span>
+                                    </div>
+                                )
                             )}
                         </div>
                     </div>
@@ -1219,7 +1250,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.6</span>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.7</span>
                     </div>
 
                     {renderPopup()}
