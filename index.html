@@ -139,11 +139,9 @@
             const [screen, setScreen] = useState('menu');
             const [selectedMode, setSelectedMode] = useState(null); 
             
-            // 🌟 States สำหรับการสลับหน้า
+            // States สำหรับหน้าโหมดต่างๆ
             const [currentPage, setCurrentPage] = useState(0); 
             const modeTitles = ["DIVE MODE", "TRAINING MODE", "PREP MODE"];
-            
-            // 🌟 ตัวแปรสำหรับตรวจจับการปัดหน้าจอ (Swipe) โดยไม่ใช้ State ป้องกันจอกระตุก
             const touchStartX = useRef(null);
             const touchEndX = useRef(null);
             const isSwiping = useRef(false);
@@ -304,7 +302,6 @@
                 osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05);
             };
             
-            // 🌟 ฟังก์ชันเสียงจบ กู้คืนกลับมาแล้ว 100% แก้บั๊กจอดำ
             const playEndBeep = () => {
                 if (isUiMuted || cancelRef.current) return; 
                 const ctx = getAudioContext(); 
@@ -684,7 +681,6 @@
                 setScreen('menu'); 
             };
 
-            // 🌟 จัดการ Swipe เต็มหน้าจอแบบนุ่มนวล
             const handleTouchStart = (e) => {
                 touchStartX.current = e.targetTouches[0].clientX;
                 touchEndX.current = e.targetTouches[0].clientX;
@@ -736,11 +732,11 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
-            // 🌟 1. คืนชีพ ModeCard ดั้งเดิม 100% เพิ่มเติมแค่บังคับความสูงให้เท่ากันทุกหน้าจอ
+            // 🌟 1. ดึงโค้ด ModeCard กลับมาเป็นแบบ Original 100% (ไม่มีการบังคับความสูง)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
@@ -751,11 +747,11 @@
                 };
 
                 return (
-                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative h-[135px] min-w-0 ${isActive ? 'active' : ''}`}>
+                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative ${isActive ? 'active' : ''}`}>
                         {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
                         <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
                         <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '16px' }}><span>{title1}</span><span>{title2}</span></div>
-                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 w-full ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px', wordWrap: 'break-word' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
+                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
                     </div>
                 );
             };
@@ -765,82 +761,44 @@
                 return (
                     <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" onClick={() => btnClick(() => setPopupType(null))}>
                         <div className="bg-[#111] border border-[var(--neon)] rounded-2xl p-6 flex flex-col items-center shadow-[0_0_20px_rgba(200,255,0,0.2)] w-full max-w-[320px] relative" onClick={e => e.stopPropagation()}>
-                            
-                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10">
-                                <IcoClose />
-                            </button>
-
+                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10"><IcoClose /></button>
                             {popupType === 'androidInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>more_vert</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอป (Android)</h3>
-                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
-                                        แอปอาจถูกติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ<br/>คุณสามารถติดตั้งเองได้ง่ายๆ ดังนี้ครับ
-                                    </p>
-                                    
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">แอปอาจถูกติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ<br/>คุณสามารถติดตั้งเองได้ง่ายๆ ดังนี้ครับ</p>
                                     <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
-                                            <span>แตะเมนู 3 จุด <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>more_vert</span> มุมขวาบนจอ</span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
-                                            <span>เลือก <strong className="text-white">เพิ่มลงหน้าจอหลัก</strong><br/><span className="text-[11px] text-[#888]">(Add to Home screen)</span></span>
-                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">1.</span><span>แตะเมนู 3 จุด <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>more_vert</span> มุมขวาบนจอ</span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">2.</span><span>เลือก <strong className="text-white">เพิ่มลงหน้าจอหลัก</strong><br/><span className="text-[11px] text-[#888]">(Add to Home screen)</span></span></div>
                                     </div>
-
-                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
-                                        รับทราบ
-                                    </button>
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">รับทราบ</button>
                                 </div>
                             )}
-
                             {popupType === 'iosInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>ios_share</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอปลงเครื่อง</h3>
-                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
-                                        เนื่องจากข้อจำกัดของระบบ iOS<br/>กรุณาติดตั้งแอปด้วยตัวเองตามขั้นตอนดังนี้ครับ
-                                    </p>
-                                    
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">เนื่องจากข้อจำกัดของระบบ iOS<br/>กรุณาติดตั้งแอปด้วยตัวเองตามขั้นตอนดังนี้ครับ</p>
                                     <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
-                                            <span>กดปุ่มแชร์ <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>ios_share</span> ด้านล่างของจอ</span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
-                                            <span>เลือกเมนู <strong className="text-white">เพิ่มไปยังหน้าจอโฮม</strong></span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm pl-6">
-                                            <span className="text-[11px] text-[#888]">(Add to Home Screen) <span className="material-symbols-outlined inline-block align-middle ml-1" style={{fontSize:'14px'}}>add_box</span></span>
-                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">1.</span><span>กดปุ่มแชร์ <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>ios_share</span> ด้านล่างของจอ</span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">2.</span><span>เลือกเมนู <strong className="text-white">เพิ่มไปยังหน้าจอโฮม</strong></span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm pl-6"><span className="text-[11px] text-[#888]">(Add to Home Screen) <span className="material-symbols-outlined inline-block align-middle ml-1" style={{fontSize:'14px'}}>add_box</span></span></div>
                                     </div>
-
-                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
-                                        รับทราบ
-                                    </button>
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">รับทราบ</button>
                                 </div>
                             )}
-
                             {popupType === 'profile' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>account_circle</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-1 text-center tracking-wide">PRO Member</h3>
                                     <p className="text-[#aaa] font-kanit-regular text-sm text-center mb-1">{user?.email}</p>
-                                    
                                     <div className="bg-[#222] rounded-lg px-6 py-3 mt-4 mb-6 border border-[#333] w-full">
                                         <p className="text-[#888] font-kanit-regular text-xs text-center mb-1">วันหมดอายุ (Expire Date)</p>
                                         <p className={`font-mont-bold text-center text-xl ${isWarning ? 'text-[#ff3b30]' : 'text-[var(--neon)]'}`}>{localStorage.getItem('proExpireDate') || 'N/A'}</p>
                                     </div>
-
-                                    <button onClick={handleLogout} className="w-full bg-[#ff3b30]/10 border border-[#ff3b30]/50 text-[#ff3b30] rounded-xl py-3 font-mont-bold text-sm btn-press flex items-center justify-center space-x-2 transition-colors">
-                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>logout</span>
-                                        <span>Log Out (ออกจากระบบ)</span>
-                                    </button>
+                                    <button onClick={handleLogout} className="w-full bg-[#ff3b30]/10 border border-[#ff3b30]/50 text-[#ff3b30] rounded-xl py-3 font-mont-bold text-sm btn-press flex items-center justify-center space-x-2 transition-colors"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>logout</span><span>Log Out (ออกจากระบบ)</span></button>
                                 </div>
                             )}
-
                             {popupType === 'login' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ล็อกอินเพื่อใช้งาน</h3>
@@ -851,67 +809,31 @@
                                     </button>
                                 </div>
                             )}
-
                             {(popupType === 'buy' || popupType === 'expired') && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>{popupType === 'expired' ? 'hourglass_disabled' : 'workspace_premium'}</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">{popupType === 'expired' ? 'แพ็กเกจ PRO หมดอายุแล้ว' : 'อัปเกรดเป็น PRO'}</h3>
-                                    <p className="text-[#aaa] font-kanit-regular text-xs text-center mb-5 leading-relaxed">
-                                        ฟังก์ชันนี้สำหรับสมาชิก PRO เท่านั้น<br/>ปลดล็อกทุกระบบเพื่อการฝึกซ้อมที่สมจริง<br/><span className="text-[var(--neon)] font-mont-bold">อัปเกรดเพียง 69 บาท / 1 ปีเต็ม!</span>
-                                    </p>
-                                    
-                                    <button onClick={handleCopyBuyMessage} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 transition-colors mb-4 focus:bg-[var(--neon)] focus:text-black">
-                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
-                                        <span>{copyBuyText}</span>
-                                    </button>
-
-                                    <a href="https://www.opl.to/bb3company?openExternalBrowser=1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-full bg-[#00B900] text-white rounded-xl py-3.5 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(0,185,0,0.2)]">
-                                        <IcoLine />
-                                        <span className="font-mont-bold tracking-wide ml-1">ทัก LINE เพื่ออัปเกรด</span>
-                                    </a>
+                                    <p className="text-[#aaa] font-kanit-regular text-xs text-center mb-5 leading-relaxed">ฟังก์ชันนี้สำหรับสมาชิก PRO เท่านั้น<br/>ปลดล็อกทุกระบบเพื่อการฝึกซ้อมที่สมจริง<br/><span className="text-[var(--neon)] font-mont-bold">อัปเกรดเพียง 69 บาท / 1 ปีเต็ม!</span></p>
+                                    <button onClick={handleCopyBuyMessage} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 transition-colors mb-4 focus:bg-[var(--neon)] focus:text-black"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span><span>{copyBuyText}</span></button>
+                                    <a href="https://www.opl.to/bb3company?openExternalBrowser=1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-full bg-[#00B900] text-white rounded-xl py-3.5 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(0,185,0,0.2)]"><IcoLine /><span className="font-mont-bold tracking-wide ml-1">ทัก LINE เพื่ออัปเกรด</span></a>
                                 </div>
                             )}
-
                             {popupType === 'share' && (
                                 <div className="w-full flex flex-col mt-1">
                                     <h3 className="text-[var(--neon)] font-sg-bold text-[22px] mb-4 text-left tracking-wide uppercase">SHARE LINK</h3>
-                                    
                                     <div className="flex space-x-3 mb-6">
-                                        <button onClick={handleCopyUrl} className="flex-1 bg-[#1a1a1a] border border-[#333] text-white rounded-xl py-0 font-mont-bold text-[12px] uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors">
-                                            <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
-                                            <span>{copyText}</span>
-                                        </button>
-                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)] flex-shrink-0">
-                                            <IcoLine />
-                                        </a>
-                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)] flex-shrink-0">
-                                            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg>
-                                        </a>
+                                        <button onClick={handleCopyUrl} className="flex-1 bg-[#1a1a1a] border border-[#333] text-white rounded-xl py-0 font-mont-bold text-[12px] uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span><span>{copyText}</span></button>
+                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)] flex-shrink-0"><IcoLine /></a>
+                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)] flex-shrink-0"><svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg></a>
                                     </div>
-
-                                    <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit">
-                                        <img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" />
-                                    </div>
-
-                                    <div className="w-full mb-4">
-                                        <h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3>
-                                        <div className="h-[2px] w-full bg-[var(--neon)]"></div>
-                                    </div>
-
+                                    <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit"><img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" /></div>
+                                    <div className="w-full mb-4"><h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3><div className="h-[2px] w-full bg-[var(--neon)]"></div></div>
                                     <div className="flex flex-col space-y-3 mb-6">
-                                        <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]">
-                                            <span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span>
-                                            <span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span>
-                                        </button>
+                                        <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]"><span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span><span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span></button>
                                     </div>
-
-                                    <div className="w-full border-t border-[#333] pt-4 text-center">
-                                        <p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p>
-                                        <a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a>
-                                    </div>
+                                    <div className="w-full border-t border-[#333] pt-4 text-center"><p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p><a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a></div>
                                 </div>
                             )}
-
                         </div>
                     </div>
                 );
@@ -1010,7 +932,6 @@
                             <div className="relative w-[280px] h-[280px] flex items-center justify-center">
                                 <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
                                     <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
-                                    
                                     {Array.from({ length: 12 }).map((_, i) => {
                                         const isMajor = i % 3 === 0; 
                                         const angle = (i * 30) * (Math.PI / 180);
@@ -1020,7 +941,6 @@
                                             <line key={`tick-${i}`} x1={150 + r1 * Math.sin(angle)} y1={150 - r1 * Math.cos(angle)} x2={150 + r2 * Math.sin(angle)} y2={150 - r2 * Math.cos(angle)} stroke={isMajor ? "#fff" : "#555"} strokeWidth={isMajor ? "3" : "1.5"} strokeLinecap="round" />
                                         );
                                     })}
-                                    
                                     <circle ref={ringCircleRef} cx="150" cy="150" r="140" fill="none" stroke="var(--neon)" strokeWidth="12" strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE} transform="rotate(-90 150 150)" style={{ transition: isStopwatchRunning ? 'none' : 'stroke-dashoffset 0.3s' }} />
                                     {stopwatchHistory.map((item, idx) => { const angle = ((item.time % 60000) / 60000) * 360 - 90; const x = 150 + 140 * Math.cos(angle * Math.PI / 180); const y = 150 + 140 * Math.sin(angle * Math.PI / 180); return (<circle key={idx} cx={x} cy={y} r="5" fill="var(--neon)" stroke="#050505" strokeWidth="2" />); })}
                                 </svg>
@@ -1190,24 +1110,23 @@
                         </div>
                     )}
 
-                    <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] my-4 min-h-[140px]">
+                    <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] mt-2 mb-3 min-h-[120px]">
                         <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
                     </div>
 
-                    {/* 🌟 พื้นที่สไลด์เต็มหน้าจอ ครอบคลุมทั้งหมด */}
                     <div 
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
                         className="w-full flex flex-col flex-shrink-0"
                     >
-                        <div className="flex items-center w-full mb-4 space-x-4">
+                        <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
+                            <span className="text-[var(--neon)] font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
                         </div>
 
-                        <div className="flex justify-between w-full gap-2">
+                        <div className="flex justify-between w-full gap-2 mb-5 flex-shrink-0">
                             {currentPage === 0 && (
                                 <>
                                     <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
@@ -1231,7 +1150,7 @@
                             )}
                         </div>
 
-                        <div className="flex justify-center items-center space-x-1.5 mt-5 mb-5">
+                        <div className="flex justify-center items-center space-x-1.5 mt-[-5px] mb-4">
                             {[0, 1, 2].map(idx => (
                                 <div 
                                     key={idx} 
