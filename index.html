@@ -135,6 +135,8 @@
         };
 
         const App = () => {
+            const CURRENT_APP_VERSION = '1.1.12';
+            
             const [user, setUser] = useState(null);
             const [isPro, setIsPro] = useState(false); 
             const [authLoading, setAuthLoading] = useState(true);
@@ -267,11 +269,24 @@
 
             useEffect(() => { localStorage.setItem('isStopwatchOn', JSON.stringify(isStopwatchOn)); }, [isStopwatchOn]);
             useEffect(() => { localStorage.setItem('isUiMuted', JSON.stringify(isUiMuted)); }, [isUiMuted]);
+            
+            // Onboarding & Update Check
             useEffect(() => {
                 const storedNames = JSON.parse(localStorage.getItem('swimmerNamesList')) || []; setSavedNames(storedNames);
                 const storedStopHistory = JSON.parse(localStorage.getItem('persistentStopHistory'));
                 if (storedStopHistory && storedStopHistory.length > 0) { setStopwatchHistory(storedStopHistory); setHistoryMode('stop'); }
                 if (window.speechSynthesis) window.speechSynthesis.getVoices();
+
+                setTimeout(() => {
+                    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+                    const savedVer = localStorage.getItem('appVersion');
+
+                    if (!hasSeenOnboarding) {
+                        setPopupType('onboarding');
+                    } else if (savedVer !== CURRENT_APP_VERSION) {
+                        setPopupType('whatsNew');
+                    }
+                }, 500);
             }, []);
 
             useEffect(() => {
@@ -766,7 +781,7 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
@@ -792,9 +807,113 @@
             const renderPopup = () => {
                 if (!popupType) return null;
                 return (
-                    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" onClick={() => btnClick(() => setPopupType(null))}>
+                    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" 
+                         onClick={() => { if (popupType !== 'onboarding') btnClick(() => setPopupType(null)); }}>
+                        
                         <div className="bg-[#111] border border-[var(--neon)] rounded-2xl p-6 flex flex-col items-center shadow-[0_0_20px_rgba(200,255,0,0.2)] w-full max-w-[320px] relative" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10"><IcoClose /></button>
+                            
+                            {popupType !== 'onboarding' && (
+                                <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10"><IcoClose /></button>
+                            )}
+                            
+                            {(popupType === 'onboarding' || popupType === 'appInfo') && (
+                                <div className="w-full flex flex-col mt-1 text-left">
+                                    <h3 className="text-[var(--neon)] font-sg-bold text-[18px] mb-4 text-center tracking-wide uppercase border-b border-[#333] pb-2">ABOUT APP</h3>
+
+                                    <div className="space-y-4 max-h-[60vh] overflow-y-auto hide-scroll pr-1">
+                                        <div>
+                                            <h4 className="text-white font-bold text-sm mb-2">App for amateur to professional swimmers<br/><span className="text-xs text-[#ccc] font-normal">(แอพสำหรับนักกีฬาว่ายน้ำ มือสมัครเล่น-มืออาชีพ)</span></h4>
+                                            <ul className="text-[#ccc] text-[11px] space-y-1.5 pl-4 list-disc">
+                                                <li>Learn start sequences<br/><span className="text-[#888]">(เรียนรู้การออกตัว)</span></li>
+                                                <li>Master the start<br/><span className="text-[#888]">(ฝึกออกตัวให้ชำนาญ)</span></li>
+                                                <li>Train body reflexes<br/><span className="text-[#888]">(ฝึกการตอบสนองของร่างกาย)</span></li>
+                                                <li>Realistic timing system<br/><span className="text-[#888]">(ระบบจับเวลาหลังปล่อยตัวแบบเหตุการณ์จริง)</span></li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="bg-[var(--neon)]/10 border border-[var(--neon)]/30 p-3 rounded-xl">
+                                            <h4 className="text-[var(--neon)] font-bold text-sm mb-1 uppercase">THINGS TO KNOW<br/><span className="text-xs text-[var(--neon)] opacity-80 font-normal">(สิ่งที่ควรรู้)</span></h4>
+                                            <p className="text-[#ccc] text-xs">- Recommend using an external speaker for real usage.<br/><span className="text-[#888] pl-2">(แนะนำให้ใช้ลำโพงเสริม ในการใช้งาน)</span></p>
+                                        </div>
+
+                                        <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl">
+                                            <h4 className="text-red-400 font-bold text-sm mb-1 uppercase">WARNING<br/><span className="text-xs text-red-400 opacity-80 font-normal">(สิ่งที่ต้องระวัง)</span></h4>
+                                            <p className="text-[#ccc] text-xs">- Turn off app notifications to prevent sound interruptions during real usage.<br/><span className="text-[#888] pl-2">(ควรปิดการแจ้งเตือนแอพต่างๆ เพื่อกันเสียงรบกวนเวลาใช้งานจริง)</span></p>
+                                        </div>
+                                    </div>
+
+                                    {popupType === 'onboarding' ? (
+                                        <button onClick={() => btnClick(() => {
+                                            localStorage.setItem('hasSeenOnboarding', 'true');
+                                            localStorage.setItem('appVersion', CURRENT_APP_VERSION); 
+                                            setPopupType(null);
+                                        })} className="w-full mt-6 bg-[var(--neon)] text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors shadow-[0_0_15px_rgba(200,255,0,0.3)] tracking-wider">รับทราบ (ACKNOWLEDGE)</button>
+                                    ) : (
+                                        <button onClick={() => btnClick(() => setPopupType(null))} className="w-full mt-6 bg-white text-black rounded-xl py-3 font-mont-bold text-sm btn-press transition-colors">ปิดหน้าต่าง</button>
+                                    )}
+                                </div>
+                            )}
+
+                            {popupType === 'whatsNew' && (
+                                <div className="w-full flex flex-col mt-1 text-left">
+                                    <div className="flex items-center justify-center mb-4 border-b border-[#333] pb-3">
+                                        <span className="material-symbols-outlined text-[var(--neon)] mr-2" style={{fontSize: '28px'}}>new_releases</span>
+                                        <h3 className="text-[var(--neon)] font-sg-bold text-[18px] tracking-wide uppercase mt-1">WHAT'S NEW (V.1.1.12)</h3>
+                                    </div>
+                                    
+                                    <div className="space-y-4 max-h-[60vh] overflow-y-auto hide-scroll pr-1">
+                                        <div>
+                                            <ul className="text-[#ccc] text-xs space-y-3">
+                                                <li className="flex items-start"><span className="text-[var(--neon)] mr-2">🚀</span><span><strong>ระบบแจ้งเตือนอัปเดต:</strong> ไม่พลาดทุกฟีเจอร์ใหม่ๆ ที่เราพัฒนาให้คุณ</span></li>
+                                                <li className="flex items-start"><span className="text-[var(--neon)] mr-2">🌐</span><span><strong>About App 2 ภาษา:</strong> รองรับภาษาอังกฤษและไทยอย่างสมบูรณ์แบบ</span></li>
+                                                <li className="flex items-start"><span className="text-[var(--neon)] mr-2">🎯</span><span><strong>อัปเกรด Manual Mode:</strong> ซ่อนปุ่ม Stop และขยายปุ่ม GO ให้ใหญ่เต็มตา</span></li>
+                                                <li className="flex items-start"><span className="text-[var(--neon)] mr-2">🎮</span><span><strong>Gamification Checklist:</strong> เพิ่มหลอดพลังการเตรียมของ ให้รู้ว่าพร้อมแข่ง 100% หรือยัง</span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => btnClick(() => {
+                                        localStorage.setItem('appVersion', CURRENT_APP_VERSION);
+                                        setPopupType(null);
+                                    })} className="w-full mt-6 bg-[var(--neon)] text-black rounded-xl py-3 font-mont-bold text-sm btn-press transition-colors shadow-[0_0_15px_rgba(200,255,0,0.3)] tracking-wider">รับทราบการอัปเดต</button>
+                                </div>
+                            )}
+
+                            {/* Popup Changelog (ประวัติอัปเดต) */}
+                            {popupType === 'changelog' && (
+                                <div className="w-full flex flex-col mt-1 text-left">
+                                    <div className="flex items-center justify-center mb-4 border-b border-[#333] pb-3">
+                                        <span className="material-symbols-outlined text-[var(--neon)] mr-2" style={{fontSize: '28px'}}>history</span>
+                                        <h3 className="text-[var(--neon)] font-sg-bold text-[18px] tracking-wide uppercase mt-1">UPDATE HISTORY</h3>
+                                    </div>
+                                    
+                                    <div className="space-y-3 max-h-[60vh] overflow-y-auto hide-scroll pr-1 pb-2">
+                                        <div className="bg-[#1a1a1a] p-3 rounded-xl border border-[var(--neon)]/50">
+                                            <h4 className="text-[var(--neon)] font-mont-bold text-sm mb-1">V.1.1.12 (Latest)</h4>
+                                            <p className="text-[#ccc] text-xs leading-relaxed">เพิ่มระบบ Onboarding แบบบังคับอ่าน, เปลี่ยนหน้า About App เป็น 2 ภาษา, เพิ่มประวัติอัปเดตแอปพลิเคชัน</p>
+                                        </div>
+                                        <div className="bg-[#111] p-3 rounded-xl border border-[#333]">
+                                            <h4 className="text-white font-mont-bold text-sm mb-1">V.1.1.10</h4>
+                                            <p className="text-[#888] text-xs leading-relaxed">แยกโหมด Checklist ออกมาโดยเฉพาะ พร้อมเพิ่มแถบหลอดพลัง (Gamification), ปรับปรุงหน้า Match Tips รูปแบบ Full Screen</p>
+                                        </div>
+                                        <div className="bg-[#111] p-3 rounded-xl border border-[#333]">
+                                            <h4 className="text-white font-mont-bold text-sm mb-1">V.1.1.7</h4>
+                                            <p className="text-[#888] text-xs leading-relaxed">อัปเกรด Manual Mode ซ่อนปุ่ม STOP, เพิ่มเสียงประกาศ Announcer, และเปลี่ยนปุ่มสุดท้ายเป็น GO สีเขียวนีออน</p>
+                                        </div>
+                                        <div className="bg-[#111] p-3 rounded-xl border border-[#333]">
+                                            <h4 className="text-white font-mont-bold text-sm mb-1">V.1.1.4</h4>
+                                            <p className="text-[#888] text-xs leading-relaxed">เพิ่ม Dynamic Hero Image แสดงรายละเอียดของแต่ละโหมดที่หน้าแรก, เปิดให้ผู้ใช้งานทั่วไปสามารถใช้งาน Stopwatch ได้ฟรี</p>
+                                        </div>
+                                        <div className="bg-[#111] p-3 rounded-xl border border-[#333]">
+                                            <h4 className="text-white font-mont-bold text-sm mb-1">V.1.0.0</h4>
+                                            <p className="text-[#888] text-xs leading-relaxed">First Release (เปิดตัวแอปพลิเคชัน SwimStart Trainer)</p>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full mt-4 bg-[#222] text-white rounded-xl py-3 font-mont-bold text-sm btn-press transition-colors hover:bg-[#333]">ปิดหน้าต่าง</button>
+                                </div>
+                            )}
+                            
                             {popupType === 'androidInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>more_vert</span>
@@ -1167,7 +1286,6 @@
                         </div>
                     )}
 
-                    {/* Hero Image / Dynamic Mode Description */}
                     <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#0a0a0a] border border-[#222] mt-2 mb-3 min-h-[120px]">
                         {!selectedMode ? (
                             <div className="absolute inset-0 w-full h-full animate-fade-in">
@@ -1191,10 +1309,24 @@
                         className="w-full flex flex-col flex-shrink-0"
                         style={{ touchAction: 'pan-y' }}
                     >
-                        <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
-                            <span className="text-[var(--neon)] font-sg-bold uppercase tracking-widest" style={{ fontSize: '15px' }}>{modeTitles[currentPage]}</span>
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
+                        <div className="flex items-center w-full mb-3 flex-shrink-0 relative">
+                            <div className="flex-1 flex items-center pr-4">
+                                <div className="h-[2px] w-full bg-[var(--neon)] opacity-60"></div>
+                            </div>
+                            
+                            <span className="text-[var(--neon)] font-sg-bold uppercase tracking-widest flex-shrink-0" style={{ fontSize: '15px' }}>
+                                {modeTitles[currentPage]}
+                            </span>
+                            
+                            <div className="flex-1 flex items-center justify-end pl-4">
+                                <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60 mr-3"></div>
+                                <button 
+                                    onClick={() => btnClick(() => setPopupType('appInfo'))}
+                                    className="text-[var(--neon)] btn-press flex items-center justify-center flex-shrink-0"
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>info</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex justify-between w-full gap-2 flex-shrink-0">
@@ -1250,7 +1382,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.8</span>
+                        <span onClick={() => btnClick(() => setPopupType('changelog'))} className="font-mont-bold text-[#666] uppercase cursor-pointer btn-press" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.12</span>
                     </div>
 
                     {renderPopup()}
