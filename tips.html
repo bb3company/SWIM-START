@@ -46,7 +46,7 @@
             scroll-snap-align: start;
             scroll-snap-stop: always;
             overflow-y: auto;
-            padding-bottom: 120px;
+            padding-bottom: 60px;
         }
         
         .cover-page {
@@ -70,13 +70,6 @@
             position: relative;
             z-index: 2;
         }
-
-        .check-box {
-            width: 24px; height: 24px; border: 2px solid #444; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-        }
-        .check-box.checked { background-color: var(--neon); border-color: var(--neon); }
-        .check-box.checked::after { content: "✓"; color: black; font-weight: bold; font-size: 16px; }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -86,34 +79,16 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useRef } = React;
 
         const App = () => {
             const [currentPage, setCurrentPage] = useState(0);
             const [lang, setLang] = useState('th');
             const scrollContainerRef = useRef(null);
             
-            // 🌟 หน้าทั้งหมด 9 หน้าเป๊ะๆ ไม่มีเบิ้ลแล้วครับ
-            const totalPages = 9; 
-
-            const [checklist, setChecklist] = useState(() => {
-                const saved = localStorage.getItem('swimstart_checklist');
-                return saved ? JSON.parse(saved) : {};
-            });
-
-            useEffect(() => { localStorage.setItem('swimstart_checklist', JSON.stringify(checklist)); }, [checklist]);
+            const totalPages = 7; 
 
             const t = (th, en) => lang === 'th' ? th : en;
-
-            const toggleCheck = (id) => {
-                if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(40); } catch(e) {} }
-                setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
-            };
-
-            const clearChecklist = () => {
-                const msg = lang === 'th' ? 'ต้องการล้างข้อมูลเช็คลิสต์ทั้งหมดใช่ไหม?' : 'Clear all checklist data?';
-                if(confirm(msg)) { setChecklist({}); }
-            };
 
             const handleScroll = () => {
                 if (scrollContainerRef.current) {
@@ -124,26 +99,10 @@
                 }
             };
 
-            const goToChecklist = () => {
-                if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(40); } catch(e) {} }
-                if (scrollContainerRef.current) {
-                    const width = scrollContainerRef.current.offsetWidth;
-                    // กระโดดไปที่ index 8 (หน้า Checklist)
-                    scrollContainerRef.current.scrollTo({ left: width * 8, behavior: 'smooth' });
-                }
-            };
-
             const goBack = () => {
                 if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(40); } catch(e) {} }
                 window.history.back();
             };
-
-            const CheckItem = ({ id, labelTH, labelEN }) => (
-                <div onClick={() => toggleCheck(id)} className="flex items-start space-x-3 bg-[#111] p-3 rounded-xl border border-[#222] mb-2 cursor-pointer btn-press">
-                    <div className={`check-box flex-shrink-0 mt-0.5 ${checklist[id] ? 'checked' : ''}`}></div>
-                    <span className={`font-kanit text-sm leading-snug ${checklist[id] ? 'text-[#666] line-through' : 'text-white'}`}>{t(labelTH, labelEN)}</span>
-                </div>
-            );
 
             return (
                 <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col bg-[#050505] relative font-kanit">
@@ -168,7 +127,6 @@
                         <div className="swipe-container" ref={scrollContainerRef} onScroll={handleScroll}>
                             
                             {/* ================= PAGE 0 (COVER 1: SECRET TIPS) ================= */}
-                            {/* 🌟 เปลี่ยนเป็นชื่อไฟล์โลคอล cover-tips.jpg */}
                             <div className="swipe-page cover-page hide-scroll" style={{ backgroundImage: "url('cover-tips.jpg')" }}>
                                 <div className="cover-overlay"></div>
                                 <div className="cover-content mt-10">
@@ -338,7 +296,6 @@
                             </div>
 
                             {/* ================= PAGE 5 (COVER 2: RACE PROCEDURE) ================= */}
-                            {/* 🌟 เปลี่ยนเป็นชื่อไฟล์โลคอล cover-race.jpg */}
                             <div className="swipe-page cover-page hide-scroll" style={{ backgroundImage: "url('cover-race.jpg')" }}>
                                 <div className="cover-overlay"></div>
                                 <div className="cover-content mt-10">
@@ -463,92 +420,8 @@
                                 </div>
                             </div>
 
-                            {/* ================= PAGE 7 (COVER 3: CHECKLIST) ================= */}
-                            {/* 🌟 เปลี่ยนเป็นชื่อไฟล์โลคอล cover-check.jpg */}
-                            <div className="swipe-page cover-page hide-scroll" style={{ backgroundImage: "url('cover-check.jpg')" }}>
-                                <div className="cover-overlay"></div>
-                                <div className="cover-content mt-10">
-                                    <div className="w-16 h-16 bg-[#F6AD55] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(246,173,85,0.4)]">
-                                        <span className="material-symbols-outlined text-black" style={{fontSize: '36px'}}>backpack</span>
-                                    </div>
-                                    <h1 className="font-sg-bold text-white uppercase leading-[0.9] tracking-wider mb-2" style={{ fontSize: '38px' }}>RACE DAY</h1>
-                                    <h1 className="font-sg-bold text-[#F6AD55] uppercase leading-[0.9] tracking-wider mb-6" style={{ fontSize: '38px' }}>CHECKLIST</h1>
-                                    <p className="text-[#FBD38D] font-kanit text-sm tracking-wide border-t border-b border-[#C05621] py-2 px-4 mb-10">
-                                        {t('เช็คของสำคัญ อย่าให้พลาดก่อนลงสระ', 'Don\'t leave success at home')}
-                                    </p>
-                                    <div className="flex flex-col items-center animate-bounce mt-10">
-                                        <span className="text-[#888] font-mont-bold text-[10px] tracking-widest uppercase mb-1">{t('ปัดซ้ายเพื่อเริ่ม', 'SWIPE LEFT TO START')}</span>
-                                        <span className="material-symbols-outlined text-[#F6AD55]">keyboard_double_arrow_right</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* ================= PAGE 8 (CHECKLIST CONTENT) ================= */}
-                            <div className="swipe-page px-5 pt-4 hide-scroll relative">
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-8 h-8 rounded-full bg-[#1A365D] flex items-center justify-center text-[var(--neon)]"><span className="material-symbols-outlined">checklist</span></div>
-                                        <h2 className="text-white font-bold text-lg">{t('Checklist วันแข่ง', 'Race Day Checklist')}</h2>
-                                    </div>
-                                    <button onClick={clearChecklist} className="text-[#666] text-[10px] uppercase font-bold border border-[#333] px-2 py-1 rounded bg-[#111] btn-press">Reset</button>
-                                </div>
-                                <p className="text-[#888] text-[10px] mb-4 leading-tight">{t('ติ๊กเพื่อบันทึกของที่เตรียมแล้ว (บันทึกในเครื่องอัตโนมัติ)', 'Tap to check off items (Saved locally automatically)')}</p>
-
-                                <div className="mb-5">
-                                    <h3 className="text-[var(--neon)] text-xs font-bold mb-2 uppercase tracking-wider pl-1">🩱 {t('อุปกรณ์ลงสระ (Race Gear)', 'Race Gear')}</h3>
-                                    <CheckItem id="gear_suit" labelTH="ชุดว่ายน้ำตัวเก่ง / ชุดแข่ง (Tech Suit)" labelEN="Main Swimsuit / Tech Suit" />
-                                    <CheckItem id="gear_suit_backup" labelTH="ชุดว่ายน้ำสำรอง (กันขาดหรือซิปแตก)" labelEN="Backup Swimsuit" />
-                                    <CheckItem id="gear_goggles" labelTH="แว่นตาว่ายน้ำ (อย่างน้อย 2 อัน)" labelEN="Goggles (at least 2 pairs)" />
-                                    <CheckItem id="gear_cap" labelTH="หมวกว่ายน้ำ (อย่างน้อย 2 ใบ)" labelEN="Swim Cap (at least 2 caps)" />
-                                </div>
-
-                                <div className="mb-5">
-                                    <h3 className="text-[#63B3ED] text-xs font-bold mb-2 uppercase tracking-wider pl-1">🧥 {t('อุปกรณ์รักษาร่างกาย', 'Body Care & Warmth')}</h3>
-                                    <CheckItem id="body_parka" labelTH="เสื้อคลุมนักกีฬา (Parka) / เสื้อกันหนาว" labelEN="Swim Parka / Warm Jacket" />
-                                    <CheckItem id="body_towel" labelTH="ผ้าเช็ดตัวใหญ่ 2-3 ผืน / ผ้าชามัวร์" labelEN="Towels (2-3) / Chamois" />
-                                    <CheckItem id="body_shoes" labelTH="รองเท้าแตะ (กันลื่นและเชื้อโรค)" labelEN="Sandals / Flip-flops" />
-                                    <CheckItem id="body_clothes" labelTH="เสื้อผ้าแห้งและชุดชั้นในเปลี่ยนกลับ" labelEN="Dry clothes & underwear for going home" />
-                                </div>
-
-                                <div className="mb-5">
-                                    <h3 className="text-[#F6AD55] text-xs font-bold mb-2 uppercase tracking-wider pl-1">🍌 {t('โภชนาการ (Fuel & Hydration)', 'Fuel & Hydration')}</h3>
-                                    <CheckItem id="fuel_water" labelTH="กระบอกน้ำดื่มส่วนตัว (สำคัญมาก!)" labelEN="Personal Water Bottle (Crucial!)" />
-                                    <CheckItem id="fuel_electro" labelTH="เกลือแร่ (Electrolytes)" labelEN="Electrolytes" />
-                                    <CheckItem id="fuel_food" labelTH="ไข่ต้ม, ขนมปัง, กล้วย" labelEN="Boiled egg, Bread, Banana" />
-                                    <CheckItem id="fuel_snack" labelTH="สแน็ค: นมช็อกโกแลต, Energy Bar, เยลลี่" labelEN="Snacks: Choc Milk, Energy Bar, Jelly" />
-                                </div>
-
-                                <div className="mb-5">
-                                    <h3 className="text-[#B794F4] text-xs font-bold mb-2 uppercase tracking-wider pl-1">🎒 {t('ของใช้จิปาถะ', 'Miscellaneous')}</h3>
-                                    <CheckItem id="misc_id" labelTH="บัตรประจำตัวนักกีฬา / บัตร ปชช." labelEN="Athlete ID / Identity Card" />
-                                    <CheckItem id="misc_program" labelTH="สูจิบัตร / ตารางแข่ง (เช็ค Heat/Lane)" labelEN="Race Program (Check Heat/Lane)" />
-                                    <CheckItem id="misc_bag" labelTH="ถุงพลาสติก หรือ Wet Bag ใส่ของเปียก" labelEN="Plastic/Wet Bag for wet gear" />
-                                    <CheckItem id="misc_shower" labelTH="แชมพู / สบู่ สำหรับอาบน้ำ" labelEN="Shampoo / Soap for shower" />
-                                    <CheckItem id="misc_sunblock" labelTH="ครีมกันแดด (กรณีแข่งสระเปิด)" labelEN="Sunscreen (for open-air pools)" />
-                                </div>
-
-                                <div className="mb-8 border-t border-[#333] pt-4 mt-2">
-                                    <h3 className="text-[#F56565] text-xs font-bold mb-2 uppercase tracking-wider pl-1">🏕️ Parent Survival Gear</h3>
-                                    <CheckItem id="parent_chair" labelTH="เก้าอี้สนามพับได้ / เสื่อปูนั่ง" labelEN="Camping Chair / Mat" />
-                                    <CheckItem id="parent_fan" labelTH="ร่ม / พัดลมพกพา (สระเปิดร้อนมาก)" labelEN="Umbrella / Portable Fan" />
-                                    <CheckItem id="parent_ice" labelTH="กระติกน้ำแข็งใบเล็ก (แช่น้ำ/ผ้าเย็น)" labelEN="Small Ice Cooler" />
-                                    <CheckItem id="parent_power" labelTH="พาวเวอร์แบงค์ (ถ่ายคลิปแบตหมดไว)" labelEN="Powerbank" />
-                                    <CheckItem id="parent_pen" labelTH="ปากกาเคมี (เขียน Heat/Lane บนแขน)" labelEN="Sharpie Marker (Write Heat/Lane on arm)" />
-                                </div>
-                            </div>
-
                         </div>
                     </div>
-
-                    {/* 🌟 ซ่อนปุ่มถ้าอยู่หน้า Checklist (หน้าปก Checklist คือ 7, เนื้อหา Checklist คือ 8) */}
-                    {currentPage < 7 && (
-                        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-20 pointer-events-auto">
-                            <button onClick={goToChecklist} className="bg-[var(--neon)] text-black px-6 py-3 rounded-full font-sg-bold uppercase tracking-widest shadow-[0_0_20px_rgba(200,255,0,0.3)] btn-press flex items-center">
-                                <span className="material-symbols-outlined mr-2" style={{fontSize: '20px'}}>checklist</span>
-                                GO TO CHECKLIST
-                            </button>
-                        </div>
-                    )}
 
                     {/* Pagination Dots */}
                     <div className="absolute bottom-3 left-0 right-0 flex justify-center space-x-2 z-10 pointer-events-none">
