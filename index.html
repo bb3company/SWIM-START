@@ -678,6 +678,7 @@
                 setScreen('menu'); 
             };
 
+            // 🌟 3. ระบบจัดการ Swipe เปลี่ยนหน้า ถูกเซ็ตให้รองรับ touch-action: pan-y เพื่อให้ปัดลื่นไหลบนมือถือ
             const handleTouchStart = (e) => {
                 touchStartX.current = e.targetTouches[0].clientX;
                 touchEndX.current = e.targetTouches[0].clientX;
@@ -729,11 +730,11 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
-            // 🌟 1. ใช้ min-h-[145px] เพื่อบังคับความสูงขั้นต่ำให้เท่ากับหน้าแรกสุด (ป้องกันข้อความล้น)
+            // 🌟 1. ดึงโค้ด CSS ของการ์ดกลับเป็นค่าดั้งเดิม 100% (ไม่มี min-h ที่ทำให้เละ)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
@@ -744,7 +745,7 @@
                 };
 
                 return (
-                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative min-h-[145px] ${isActive ? 'active' : ''}`}>
+                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative ${isActive ? 'active' : ''}`}>
                         {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
                         <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
                         <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '16px' }}><span>{title1}</span><span>{title2}</span></div>
@@ -1047,6 +1048,7 @@
                 );
             }
 
+            // 🌟 6. Default Render: หน้า Menu หลัก (เพิ่ม touch-action: pan-y ให้สไลด์ง่ายขึ้น)
             return (
                 <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
                     
@@ -1107,48 +1109,52 @@
                         </div>
                     )}
 
+                    {/* ขยับกรอบโหมดขึ้นไปชิดกับ Hero Image ตามภาพตัวอย่าง */}
                     <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] mt-2 mb-3 min-h-[120px]">
                         <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
                     </div>
 
-                    {/* 🌟 พื้นที่สไลด์เต็มหน้าจอ ครอบคลุมทั้งหมด */}
+                    {/* 🌟 พื้นที่สไลด์เต็มหน้าจอ พร้อม touchAction: pan-y เพื่อให้ปัดบนมือถือได้ลื่นไหล ไม่ติดปุ่ม */}
                     <div 
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
                         className="w-full flex flex-col flex-shrink-0"
+                        style={{ touchAction: 'pan-y' }}
                     >
-                        <div className="flex items-center w-full mb-4 space-x-4">
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                        <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
+                            <span className="text-[var(--neon)] font-sg-bold uppercase tracking-widest" style={{ fontSize: '15px' }}>{modeTitles[currentPage]}</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
                         </div>
 
-                        <div className="flex justify-between w-full gap-2">
+                        {/* 🌟 ปรับข้อความ (desc) ให้เป็น 3 บรรทัดเป๊ะๆ ทุกปุ่ม เพื่อให้ Flexbox ดึงความสูงเท่ากันเอง */}
+                        <div className="flex justify-between w-full gap-2 flex-shrink-0">
                             {currentPage === 0 && (
                                 <>
-                                    <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
-                                    <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard practice\nsequence." isProOnly={true} />
-                                    <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real competition\nfeel." isProOnly={true} />
+                                    <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction\ntime\nfocus." isProOnly={false} />
+                                    <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard\npractice\nsequence." isProOnly={true} />
+                                    <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real\ncompetition\nfeel." isProOnly={true} />
                                 </>
                             )}
                             {currentPage === 1 && (
                                 <>
-                                    <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\ncontrol." isProOnly={true} />
-                                    <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction time\ntraining." isProOnly={true} />
-                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOP" title2="WATCH" desc="Manual timing\nmode." isProOnly={true} />
+                                    <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\nmanual\ncontrol." isProOnly={true} />
+                                    <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction\ntime\ntraining." isProOnly={true} />
+                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOP" title2="WATCH" desc="Manual\ntiming\nmode." isProOnly={true} />
                                 </>
                             )}
                             {currentPage === 2 && (
                                 <>
-                                    <ModeCard id="pre_match" icon={IcoLightbulb} title1="MATCH" title2="TIPS" desc="Competition\nadvice." isProOnly={false} />
-                                    <ModeCard id="check_list" icon={IcoChecklist} title1="CHECK" title2="LIST" desc="Preparation\nitems." isProOnly={false} />
-                                    <ModeCard id="user_profile" icon={IcoPerson} title1="USER" title2="PROFILE" desc="Account\nsettings." isProOnly={false} />
+                                    <ModeCard id="pre_match" icon={IcoLightbulb} title1="MATCH" title2="TIPS" desc="Competition\nprep\nadvice." isProOnly={false} />
+                                    <ModeCard id="check_list" icon={IcoChecklist} title1="CHECK" title2="LIST" desc="Essential\npreparation\nitems." isProOnly={false} />
+                                    <ModeCard id="user_profile" icon={IcoPerson} title1="USER" title2="PROFILE" desc="Manage\naccount\nsettings." isProOnly={false} />
                                 </>
                             )}
                         </div>
 
-                        <div className="flex justify-center items-center space-x-1.5 mt-5 mb-5">
+                        {/* 🌟 จุด Pagination ตรงตามภาพ (ขีดเขียว และจุดวงกลมเทา) */}
+                        <div className="flex justify-center items-center space-x-1.5 mt-3 mb-4">
                             {[0, 1, 2].map(idx => (
                                 <div 
                                     key={idx} 
@@ -1177,7 +1183,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.2</span>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.3</span>
                     </div>
 
                     {renderPopup()}
