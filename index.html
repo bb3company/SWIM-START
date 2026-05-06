@@ -50,8 +50,6 @@
         .font-kanit-regular { font-family: 'Kanit', sans-serif; font-weight: 400; }
         .font-bebas { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
         .tabular-nums { font-variant-numeric: tabular-nums; }
-        .mode-card { border: 2px solid #333; border-radius: 12px; background: transparent; transition: all 0.2s; }
-        .mode-card.active { border-color: var(--neon); background-color: rgba(200, 255, 0, 0.03); box-shadow: inset 0 0 20px rgba(200, 255, 0, 0.05); }
         .btn-press:active { transform: scale(0.95); transition: 0.05s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
@@ -298,19 +296,55 @@
                 osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05);
             };
             
-            const playEndBeep = () => {
-                if (isUiMuted || cancelRef.current) return; 
+            // ระบบเสียง Multi-tone นกหวีด
+            const playWhistle = (duration) => {
+                if (cancelRef.current) return; 
                 const ctx = getAudioContext(); 
-                const osc = ctx.createOscillator(); 
-                const gain = ctx.createGain(); 
-                osc.type = 'square'; 
-                osc.frequency.setValueAtTime(1000, ctx.currentTime); 
-                gain.gain.setValueAtTime(1.5, ctx.currentTime); 
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
-                osc.connect(gain); 
-                gain.connect(ctx.destination); 
-                osc.start(); 
-                osc.stop(ctx.currentTime + 0.6);
+                const freqs = [2750, 2850, 2960, 3200, 3800]; 
+                const masterGain = ctx.createGain(); 
+                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
+                masterGain.connect(ctx.destination);
+                
+                freqs.forEach(f => { 
+                    const osc = ctx.createOscillator(); 
+                    const gain = ctx.createGain(); 
+                    osc.type = 'sine'; 
+                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
+                    gain.gain.setValueAtTime(0, ctx.currentTime); 
+                    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02); 
+                    gain.gain.setValueAtTime(0.25, ctx.currentTime + duration - 0.05); 
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration); 
+                    osc.connect(gain); 
+                    gain.connect(masterGain); 
+                    osc.start(); 
+                    osc.stop(ctx.currentTime + duration); 
+                });
+            };
+            
+            // ระบบเสียง Multi-tone BEEP
+            const playBeep = () => {
+                if (cancelRef.current) return; 
+                const ctx = getAudioContext(); 
+                const duration = 0.55; 
+                const freqs = [1000, 1800, 2600];
+                const masterGain = ctx.createGain(); 
+                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
+                masterGain.connect(ctx.destination);
+                
+                freqs.forEach(f => { 
+                    const osc = ctx.createOscillator(); 
+                    const gain = ctx.createGain(); 
+                    osc.type = 'square'; 
+                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
+                    gain.gain.setValueAtTime(0, ctx.currentTime); 
+                    gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01); 
+                    gain.gain.setValueAtTime(0.4, ctx.currentTime + duration - 0.1); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration); 
+                    osc.connect(gain); 
+                    gain.connect(masterGain); 
+                    osc.start(); 
+                    osc.stop(ctx.currentTime + duration); 
+                });
             };
 
             const btnClick = (callback) => { triggerVibrate(); playClickSound(); if (callback) callback(); };
@@ -387,7 +421,6 @@
                 }
             };
 
-            // 🌟 แก้ไข: นำ handleStopwatchToggle กลับมาแล้ว!
             const handleStopwatchToggle = () => {
                 btnClick(() => {
                     if (!user) { setPopupType('login'); return; }
@@ -406,6 +439,7 @@
                 return format === 'colon' ? `${m}:${s}:${c}` : `${m}.${s}.${c}`;
             };
 
+            // 🌟 ปรับแก้บักสำหรับ STOPWATCH ตรง: ตรวจสอบโหมดเวลาสั่งกดปุ่ม START/STOP
             const handleStopwatchAction = (action) => {
                 if (!isStopwatchRunning || isCooldown) return; 
                 
@@ -460,57 +494,6 @@
             const selectExistingName = (name) => { setLanes(prev => ({ ...prev, [activeLaneModal]: name })); setActiveLaneModal(null); setTempInputName(''); };
             const deleteSavedName = (nameToDelete, e) => { e.stopPropagation(); btnClick(); const updatedList = savedNames.filter(n => n !== nameToDelete); setSavedNames(updatedList); localStorage.setItem('swimmerNamesList', JSON.stringify(updatedList)); const updatedLanes = { ...lanes }; for (let i = 1; i <= 5; i++) { if (updatedLanes[i] === nameToDelete) updatedLanes[i] = ''; } setLanes(updatedLanes); };
             const clearCurrentLane = () => { setLanes(prev => ({ ...prev, [activeLaneModal]: '' })); setActiveLaneModal(null); setTempInputName(''); };
-
-            // ระบบเสียง Multi-tone นกหวีด
-            const playWhistle = (duration) => {
-                if (cancelRef.current) return; 
-                const ctx = getAudioContext(); 
-                const freqs = [2750, 2850, 2960, 3200, 3800]; 
-                const masterGain = ctx.createGain(); 
-                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
-                masterGain.connect(ctx.destination);
-                
-                freqs.forEach(f => { 
-                    const osc = ctx.createOscillator(); 
-                    const gain = ctx.createGain(); 
-                    osc.type = 'sine'; 
-                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
-                    gain.gain.setValueAtTime(0, ctx.currentTime); 
-                    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02); 
-                    gain.gain.setValueAtTime(0.25, ctx.currentTime + duration - 0.05); 
-                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration); 
-                    osc.connect(gain); 
-                    gain.connect(masterGain); 
-                    osc.start(); 
-                    osc.stop(ctx.currentTime + duration); 
-                });
-            };
-            
-            // ระบบเสียง Multi-tone BEEP
-            const playBeep = () => {
-                if (cancelRef.current) return; 
-                const ctx = getAudioContext(); 
-                const duration = 0.55; 
-                const freqs = [1000, 1800, 2600];
-                const masterGain = ctx.createGain(); 
-                masterGain.gain.setValueAtTime(0.9, ctx.currentTime); 
-                masterGain.connect(ctx.destination);
-                
-                freqs.forEach(f => { 
-                    const osc = ctx.createOscillator(); 
-                    const gain = ctx.createGain(); 
-                    osc.type = 'square'; 
-                    osc.frequency.setValueAtTime(f, ctx.currentTime); 
-                    gain.gain.setValueAtTime(0, ctx.currentTime); 
-                    gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01); 
-                    gain.gain.setValueAtTime(0.4, ctx.currentTime + duration - 0.1); 
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration); 
-                    osc.connect(gain); 
-                    gain.connect(masterGain); 
-                    osc.start(); 
-                    osc.stop(ctx.currentTime + duration); 
-                });
-            };
 
             const speak = (text, lang = 'en-US', rate = 0.85, forceMale = false) => {
                 return new Promise((resolve) => {
@@ -705,15 +688,24 @@
                 </svg>
             );
 
+            // 🌟 ปรับ Layout กรอบการ์ดให้ตรงกราฟิกเป๊ะ (แนวตั้ง/กรอบเส้น/ฟอนต์)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
                 return (
-                    <div onClick={() => handleModeSelection(id)} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative h-[120px] w-full ${isActive ? 'active' : ''}`}>
+                    <div onClick={() => handleModeSelection(id)} className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl border-[2px] transition-all cursor-pointer relative ${isActive ? 'border-[var(--neon)] bg-[rgba(200,255,0,0.03)] shadow-[inset_0_0_15px_rgba(200,255,0,0.05)]' : 'border-[#333] bg-transparent'}`} style={{ height: '145px' }}>
                         {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
-                        <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
-                        <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '15px' }}><span>{title1}</span><span>{title2}</span></div>
-                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '10px' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
+                        
+                        <div className="mb-2 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
+                        
+                        <div className={`font-sg-bold text-center flex flex-col uppercase leading-[1] mb-2 flex-shrink-0 ${isActive ? 'text-[var(--neon)]' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '15px', letterSpacing: '0.05em' }}>
+                            <span>{title1}</span>
+                            <span>{title2}</span>
+                        </div>
+                        
+                        <div className={`font-mont-medium text-center leading-tight flex-shrink-0 px-1 ${isActive ? 'text-white' : 'text-[#666]'}`} style={{ fontSize: '10px' }}>
+                            {desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}
+                        </div>
                     </div>
                 );
             };
@@ -723,82 +715,44 @@
                 return (
                     <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-5 backdrop-blur-sm animate-fade-in" onClick={() => btnClick(() => setPopupType(null))}>
                         <div className="bg-[#111] border border-[var(--neon)] rounded-2xl p-6 flex flex-col items-center shadow-[0_0_20px_rgba(200,255,0,0.2)] w-full max-w-[320px] relative" onClick={e => e.stopPropagation()}>
-                            
-                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10">
-                                <IcoClose />
-                            </button>
-
+                            <button onClick={() => btnClick(() => setPopupType(null))} className="absolute top-4 right-4 text-[#666] btn-press z-10"><IcoClose /></button>
                             {popupType === 'androidInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>more_vert</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอป (Android)</h3>
-                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
-                                        แอปอาจถูกติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ<br/>คุณสามารถติดตั้งเองได้ง่ายๆ ดังนี้ครับ
-                                    </p>
-                                    
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">แอปอาจถูกติดตั้งไปแล้ว หรือเบราว์เซอร์ไม่รองรับ<br/>คุณสามารถติดตั้งเองได้ง่ายๆ ดังนี้ครับ</p>
                                     <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
-                                            <span>แตะเมนู 3 จุด <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>more_vert</span> มุมขวาบนจอ</span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
-                                            <span>เลือก <strong className="text-white">เพิ่มลงหน้าจอหลัก</strong><br/><span className="text-[11px] text-[#888]">(Add to Home screen)</span></span>
-                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">1.</span><span>แตะเมนู 3 จุด <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>more_vert</span> มุมขวาบนจอ</span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">2.</span><span>เลือก <strong className="text-white">เพิ่มลงหน้าจอหลัก</strong><br/><span className="text-[11px] text-[#888]">(Add to Home screen)</span></span></div>
                                     </div>
-
-                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
-                                        รับทราบ
-                                    </button>
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">รับทราบ</button>
                                 </div>
                             )}
-
                             {popupType === 'iosInstall' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-3" style={{fontSize: '48px'}}>ios_share</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ติดตั้งแอปลงเครื่อง</h3>
-                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">
-                                        เนื่องจากข้อจำกัดของระบบ iOS<br/>กรุณาติดตั้งแอปด้วยตัวเองตามขั้นตอนดังนี้ครับ
-                                    </p>
-                                    
+                                    <p className="text-[#888] font-kanit-regular text-xs text-center mb-6 leading-relaxed">เนื่องจากข้อจำกัดของระบบ iOS<br/>กรุณาติดตั้งแอปด้วยตัวเองตามขั้นตอนดังนี้ครับ</p>
                                     <div className="bg-[#222] rounded-xl p-4 border border-[#333] w-full mb-5 text-center flex flex-col space-y-3">
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">1.</span>
-                                            <span>กดปุ่มแชร์ <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>ios_share</span> ด้านล่างของจอ</span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm">
-                                            <span className="w-6 font-bold text-[var(--neon)]">2.</span>
-                                            <span>เลือกเมนู <strong className="text-white">เพิ่มไปยังหน้าจอโฮม</strong></span>
-                                        </div>
-                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm pl-6">
-                                            <span className="text-[11px] text-[#888]">(Add to Home Screen) <span className="material-symbols-outlined inline-block align-middle ml-1" style={{fontSize:'14px'}}>add_box</span></span>
-                                        </div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">1.</span><span>กดปุ่มแชร์ <span className="material-symbols-outlined inline-block align-middle text-white mx-1" style={{fontSize:'18px'}}>ios_share</span> ด้านล่างของจอ</span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm"><span className="w-6 font-bold text-[var(--neon)]">2.</span><span>เลือกเมนู <strong className="text-white">เพิ่มไปยังหน้าจอโฮม</strong></span></div>
+                                        <div className="flex items-center text-left text-[#ccc] font-kanit-regular text-sm pl-6"><span className="text-[11px] text-[#888]">(Add to Home Screen) <span className="material-symbols-outlined inline-block align-middle ml-1" style={{fontSize:'14px'}}>add_box</span></span></div>
                                     </div>
-
-                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">
-                                        รับทราบ
-                                    </button>
+                                    <button onClick={() => btnClick(() => setPopupType(null))} className="w-full bg-white text-black rounded-xl py-3.5 font-mont-bold text-sm btn-press transition-colors">รับทราบ</button>
                                 </div>
                             )}
-
                             {popupType === 'profile' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>account_circle</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-1 text-center tracking-wide">PRO Member</h3>
                                     <p className="text-[#aaa] font-kanit-regular text-sm text-center mb-1">{user?.email}</p>
-                                    
                                     <div className="bg-[#222] rounded-lg px-6 py-3 mt-4 mb-6 border border-[#333] w-full">
                                         <p className="text-[#888] font-kanit-regular text-xs text-center mb-1">วันหมดอายุ (Expire Date)</p>
                                         <p className={`font-mont-bold text-center text-xl ${isWarning ? 'text-[#ff3b30]' : 'text-[var(--neon)]'}`}>{localStorage.getItem('proExpireDate') || 'N/A'}</p>
                                     </div>
-
-                                    <button onClick={handleLogout} className="w-full bg-[#ff3b30]/10 border border-[#ff3b30]/50 text-[#ff3b30] rounded-xl py-3 font-mont-bold text-sm btn-press flex items-center justify-center space-x-2 transition-colors">
-                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>logout</span>
-                                        <span>Log Out (ออกจากระบบ)</span>
-                                    </button>
+                                    <button onClick={handleLogout} className="w-full bg-[#ff3b30]/10 border border-[#ff3b30]/50 text-[#ff3b30] rounded-xl py-3 font-mont-bold text-sm btn-press flex items-center justify-center space-x-2 transition-colors"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>logout</span><span>Log Out (ออกจากระบบ)</span></button>
                                 </div>
                             )}
-
                             {popupType === 'login' && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">ล็อกอินเพื่อใช้งาน</h3>
@@ -809,72 +763,37 @@
                                     </button>
                                 </div>
                             )}
-
                             {(popupType === 'buy' || popupType === 'expired') && (
                                 <div className="w-full flex flex-col items-center mt-2 mb-2">
                                     <span className="material-symbols-outlined text-[var(--neon)] mb-2" style={{fontSize: '48px'}}>{popupType === 'expired' ? 'hourglass_disabled' : 'workspace_premium'}</span>
                                     <h3 className="text-white font-mont-bold text-lg mb-2 text-center tracking-wide">{popupType === 'expired' ? 'แพ็กเกจ PRO หมดอายุแล้ว' : 'อัปเกรดเป็น PRO'}</h3>
-                                    <p className="text-[#aaa] font-kanit-regular text-xs text-center mb-5 leading-relaxed">
-                                        ฟังก์ชันนี้สำหรับสมาชิก PRO เท่านั้น<br/>ปลดล็อกทุกระบบเพื่อการฝึกซ้อมที่สมจริง<br/><span className="text-[var(--neon)] font-mont-bold">อัปเกรดเพียง 69 บาท / 1 ปีเต็ม!</span>
-                                    </p>
-                                    
-                                    <button onClick={handleCopyBuyMessage} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 transition-colors mb-4 focus:bg-[var(--neon)] focus:text-black">
-                                        <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
-                                        <span>{copyBuyText}</span>
-                                    </button>
-
-                                    <a href="https://www.opl.to/bb3company?openExternalBrowser=1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-full bg-[#00B900] text-white rounded-xl py-3.5 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(0,185,0,0.2)]">
-                                        <IcoLine />
-                                        <span className="font-mont-bold tracking-wide ml-1">ทัก LINE เพื่ออัปเกรด</span>
-                                    </a>
+                                    <p className="text-[#aaa] font-kanit-regular text-xs text-center mb-5 leading-relaxed">ฟังก์ชันนี้สำหรับสมาชิก PRO เท่านั้น<br/>ปลดล็อกทุกระบบเพื่อการฝึกซ้อมที่สมจริง<br/><span className="text-[var(--neon)] font-mont-bold">อัปเกรดเพียง 69 บาท / 1 ปีเต็ม!</span></p>
+                                    <button onClick={handleCopyBuyMessage} className="w-full bg-[#222] border border-[#444] text-white rounded-xl py-3 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 transition-colors mb-4 focus:bg-[var(--neon)] focus:text-black"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span><span>{copyBuyText}</span></button>
+                                    <a href="https://www.opl.to/bb3company?openExternalBrowser=1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-full bg-[#00B900] text-white rounded-xl py-3.5 font-kanit-regular text-sm btn-press flex items-center justify-center space-x-2 shadow-[0_4px_15px_rgba(0,185,0,0.2)]"><IcoLine /><span className="font-mont-bold tracking-wide ml-1">ทัก LINE เพื่ออัปเกรด</span></a>
                                 </div>
                             )}
-
                             {popupType === 'share' && (
                                 <div className="w-full flex flex-col mt-1">
                                     <h3 className="text-[var(--neon)] font-sg-bold text-[22px] mb-4 text-left tracking-wide uppercase">SHARE LINK</h3>
-                                    
                                     <div className="flex space-x-3 mb-6">
-                                        <button onClick={handleCopyUrl} className="flex-1 bg-[#1a1a1a] border border-[#333] text-white rounded-xl py-0 font-mont-bold text-[12px] uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors">
-                                            <span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span>
-                                            <span>{copyText}</span>
-                                        </button>
-                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)] flex-shrink-0">
-                                            <IcoLine />
-                                        </a>
-                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)] flex-shrink-0">
-                                            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg>
-                                        </a>
+                                        <button onClick={handleCopyUrl} className="flex-1 bg-[#1a1a1a] border border-[#333] text-white rounded-xl py-0 font-mont-bold text-[12px] uppercase tracking-wider btn-press flex items-center justify-center space-x-2 transition-colors"><span className="material-symbols-outlined" style={{fontSize: '18px'}}>content_copy</span><span>{copyText}</span></button>
+                                        <a href="https://line.me/R/msg/text/?https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#00B900] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,185,0,0.2)] flex-shrink-0"><IcoLine /></a>
+                                        <a href="fb-messenger://share/?link=https%3A%2F%2Fwww.opl.to%2Fbb3company%3FopenExternalBrowser%3D1" target="_blank" rel="noopener noreferrer" onClick={() => btnClick()} className="w-[46px] h-[46px] bg-[#0084FF] rounded-full flex items-center justify-center btn-press shadow-[0_4px_15px_rgba(0,132,255,0.2)] flex-shrink-0"><svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.923 1.498 5.485 3.805 7.118v3.623l3.473-1.921c.86.238 1.767.367 2.722.367 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm1.066 12.355l-2.73-2.909-5.32 2.909 5.865-6.223 2.802 2.91 5.247-2.91-5.864 6.223z"/></svg></a>
                                     </div>
-
-                                    <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit">
-                                        <img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" />
-                                    </div>
-
-                                    <div className="w-full mb-4">
-                                        <h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3>
-                                        <div className="h-[2px] w-full bg-[var(--neon)]"></div>
-                                    </div>
-
+                                    <div className="bg-white p-2 rounded-xl mb-6 mx-auto shadow-[0_0_15px_rgba(255,255,255,0.15)] overflow-hidden w-fit"><img src="qrcode.png" alt="QR Code" className="w-[180px] h-[180px] object-contain" /></div>
+                                    <div className="w-full mb-4"><h3 className="text-[var(--neon)] font-sg-bold text-[22px] uppercase tracking-wide mb-1 text-left">TIPS</h3><div className="h-[2px] w-full bg-[var(--neon)]"></div></div>
                                     <div className="flex flex-col space-y-3 mb-6">
-                                        <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]">
-                                            <span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span>
-                                            <span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span>
-                                        </button>
+                                        <button onClick={() => btnClick(() => window.location.href='howto.html')} className="w-full bg-[var(--neon)] text-black rounded-[10px] py-2 flex flex-col items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)]"><span className="font-sg-bold uppercase text-[15px] tracking-widest leading-none mt-1">HOW TO USE</span><span className="font-kanit-regular text-[10px] leading-tight mt-0.5">วิธีการใช้งาน</span></button>
                                     </div>
-
-                                    <div className="w-full border-t border-[#333] pt-4 text-center">
-                                        <p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p>
-                                        <a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a>
-                                    </div>
+                                    <div className="w-full border-t border-[#333] pt-4 text-center"><p className="text-[#666] font-mont-medium text-[9px] uppercase tracking-widest mb-1.5">Contact Developer</p><a href="mailto:bb3company@gmail.com" className="text-[var(--neon)] font-mont-bold text-xs tracking-wider border-b border-[var(--neon)] pb-0.5">bb3company@gmail.com</a></div>
                                 </div>
                             )}
-
                         </div>
                     </div>
                 );
-            }
+            };
 
+            // 🌟 1. เรนเดอร์ขณะกำลังโหลด Auth
             if (authLoading) {
                 return (
                     <div className="h-dvh w-full flex items-center justify-center bg-[#050505]">
@@ -883,6 +802,7 @@
                 );
             }
 
+            // 🌟 2. เรนเดอร์หน้าจอ Reflex Body
             if (screen === 'reflex') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
@@ -916,187 +836,7 @@
                 );
             }
 
-            if (screen === 'menu') {
-                return (
-                    <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
-                        
-                        <div className="flex justify-between items-center w-full pt-2 flex-shrink-0">
-                            <div className="w-24 flex justify-start items-center">
-                                <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex flex-col items-center justify-center leading-[0.9]">
-                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">TIPS &</span>
-                                    <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">SHARE</span>
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-col items-center justify-center flex-1" onClick={handleStopwatchToggle}>
-                                <div className="flex items-center space-x-1.5 mb-[3px] cursor-pointer">
-                                    <span className={`material-symbols-outlined ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '22px'}}>timer</span>
-                                    <div className={`w-[44px] h-[22px] rounded-full relative transition-colors duration-300 ${!isPro ? 'bg-[#333]' : isStopwatchOn ? 'bg-[var(--neon)]' : 'bg-[#ff3b30]'}`}>
-                                        <div className={`absolute top-[3px] w-[16px] h-[16px] bg-white rounded-full transition-transform duration-300 flex items-center justify-center ${isStopwatchOn && isPro ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}><span className={`font-mont-bold ${isStopwatchOn && isPro ? 'text-[var(--neon)]' : 'text-[#333]'}`} style={{fontSize: '10px', lineHeight: '1'}}>{!isPro ? <span className="material-symbols-outlined" style={{fontSize: '10px', color: '#666'}}>lock</span> : 'I'}</span></div>
-                                    </div>
-                                </div>
-                                <span className={`font-sg-light tracking-widest uppercase ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '10px'}}>STOPWATCH</span>
-                            </div>
-
-                            <div className="w-24 flex justify-end items-center">
-                                <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>
-                                    {isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="text-center mt-3 mb-1 flex flex-col items-center justify-center w-full flex-shrink-0">
-                            <h1 className="font-sg-bold text-white uppercase leading-[0.85]" style={{ fontSize: '50px' }}>SWIM</h1>
-                            <h1 className="font-sg-bold text-neon uppercase leading-[0.85]" style={{ fontSize: '50px', marginTop: '2px' }}>START</h1>
-                            
-                            <div className="flex items-center justify-center mt-[8px]">
-                                <div className="font-sg-light text-white uppercase tracking-[0.4em]" style={{ fontSize: '20px', marginRight: '-0.4em' }}>TRAINER</div>
-                                {isPro ? (
-                                    <div onClick={() => btnClick(() => setPopupType('profile'))} className={`ml-3 px-1.5 py-0.5 rounded-sm flex items-center justify-center cursor-pointer btn-press ${isWarning ? 'bg-[#ff3b30] animate-breathing-red' : 'bg-[var(--neon)] animate-breathing'}`}>
-                                        <span className="font-mont-bold text-black leading-none" style={{fontSize: '11px', letterSpacing: '0.05em'}}>PRO</span>
-                                    </div>
-                                ) : (
-                                    <div onClick={() => btnClick(() => setPopupType(user ? 'buy' : 'login'))} className="ml-3 px-1.5 py-0.5 rounded-sm flex items-center justify-center cursor-pointer btn-press bg-[#ff3b30] shadow-[0_0_10px_rgba(255,59,48,0.5)]">
-                                        <span className="font-mont-bold text-white leading-none" style={{fontSize: '11px', letterSpacing: '0.05em'}}>FREE</span>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            {isPro && isWarning && daysLeft !== null && (
-                                <p className="text-[#ff3b30] font-mont-medium mt-2" style={{fontSize: '10px'}}>
-                                    Your PRO subscription will expire in {daysLeft} day{daysLeft !== 1 ? 's' : ''}.
-                                </p>
-                            )}
-                        </div>
-
-                        {!isStandalone && (
-                            <div onClick={handleInstallClick} className="w-full bg-[#ff3b30] rounded-[100px] py-1 px-2 mb-2 mt-1 flex items-center justify-center cursor-pointer btn-press shadow-[0_0_10px_rgba(255,59,48,0.4)] flex-shrink-0">
-                                <span className="text-white font-kanit-regular tracking-wide text-center uppercase" style={{ fontSize: '10px' }}>
-                                    CLICK : INSTALL FOR BEST PERFORMANCE (กดติดตั้งเพื่อใช้งานได้เต็มประสิทธิภาพ)
-                                </span>
-                            </div>
-                        )}
-
-                        <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] my-4 min-h-[140px]">
-                            {!selectedMode ? (
-                                <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-start p-3 bg-[#0a0a0a] border border-[#222] rounded-lg animate-fade-in overflow-y-auto hide-scroll">
-                                    <div className="flex items-center space-x-2 mb-2 flex-shrink-0">
-                                        {selectedMode === 'quick' && <IcoQuick active={true} size="24px" />}
-                                        {selectedMode === 'ready' && <IcoWhistle active={true} size="24px" />}
-                                        {selectedMode === 'race' && <IcoTrophy active={true} size="24px" />}
-                                        {selectedMode === 'manual' && <IcoHand active={true} size="24px" />}
-                                        {selectedMode === 'reflex' && <IcoQuick active={true} size="24px" />}
-                                        {selectedMode === 'direct_stopwatch' && <IcoTimer active={true} size="24px" />}
-                                        {selectedMode === 'pre_match' && <IcoLightbulb active={true} size="24px" />}
-                                        {selectedMode === 'check_list' && <IcoChecklist active={true} size="24px" />}
-                                        {selectedMode === 'user_profile' && <IcoPerson active={true} size="24px" />}
-                                        
-                                        <span className="text-neon font-sg-bold uppercase text-[16px]">
-                                            {selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : selectedMode === 'race' ? 'RACE MODE' : selectedMode === 'manual' ? 'MANUAL MODE' : selectedMode === 'reflex' ? 'REFLEX BODY' : selectedMode === 'direct_stopwatch' ? 'STOPWATCH' : selectedMode === 'pre_match' ? 'PRE MATCH TIPS' : selectedMode === 'check_list' ? 'CHECK LIST' : 'USER PROFILE'}
-                                        </span>
-                                    </div>
-                                    <p className="text-white font-mont-medium text-center leading-[1.3] mb-3 px-2 flex-shrink-0" style={{ fontSize: '11px' }}>
-                                        {selectedMode === 'quick' && 'Designed specifically for reaction time training. Skips all whistle commands, going straight to the "Take your marks" command followed by a randomized starting beep.'}
-                                        {selectedMode === 'ready' && 'Simulates standard practice starts. The system sounds 3 short whistles and 1 long whistle for stepping up (an extra long whistle is added for backstroke), followed by a randomized start sequence.'}
-                                        {selectedMode === 'race' && "Full real-competition simulation. Begins with an announcement of the event and swimmers' names, followed by the complete competition whistle and start sequence."}
-                                        {selectedMode === 'manual' && "Full manual control. The sequence pauses at each step, requiring the coach or official to manually proceed when the swimmer is ready."}
-                                        {selectedMode === 'reflex' && "Reaction time training mini-game. Start the sequence and hit the button immediately after the beep. False starts are detected."}
-                                        {selectedMode === 'direct_stopwatch' && "Direct access to the stopwatch tool for quick timing without the full starting sequence."}
-                                        {selectedMode === 'pre_match' && "Important preparation advice and techniques for athletes to review before competition day."}
-                                        {selectedMode === 'check_list' && "A comprehensive checklist of essential items to pack and prepare for a swim meet."}
-                                        {selectedMode === 'user_profile' && "View your current membership status, account details, and subscription expiration date."}
-                                    </p>
-                                    <p className="text-[#888] font-mont-regular text-center leading-[1.4] px-1 border-t border-[#333] pt-2 pb-1" style={{ fontSize: '10px' }}>
-                                        {selectedMode === 'quick' && 'โหมดสำหรับฝึกความเร็วในการออกตัวโดยเฉพาะ ข้ามขั้นตอนการเป่านกหวีดทั้งหมด ระบบจะสั่งเข้าที่ และสุ่มระยะเวลาปล่อยตัวทันที เพื่อให้นักกีฬาโฟกัสไปที่เสียงสัญญาณปล่อยตัวเท่านั้น'}
-                                        {selectedMode === 'ready' && 'โหมดจำลองการซ้อมตามมาตรฐานการแข่งขัน ระบบจะเป่านกหวีดสั้น 3 ครั้ง และนกหวีดยาว 1 ครั้งเพื่อสั่งขึ้นแท่นสตาร์ท (ท่ากรรเชียงจะเพิ่มนกหวีดยาวเพื่อสั่งลงสระ) จากนั้นจึงเข้าสู่ขั้นตอนการปล่อยตัวแบบสุ่มเวลา'}
-                                        {selectedMode === 'race' && 'โหมดจำลองบรรยากาศการแข่งขันจริงเต็มรูปแบบ เริ่มตั้งแต่ประกาศชื่อรายการแข่งขันและรายชื่อนักกีฬา จากนั้นจะเข้าสู่กระบวนการเป่านกหวีดและปล่อยตัวตามกติกาการแข่งขันจริง'}
-                                        {selectedMode === 'manual' && 'โหมดควบคุมด้วยตนเอง ระบบจะหยุดรอให้ผู้ใช้งานกดปุ่มเพื่อดำเนินการไปยังขั้นตอนถัดไป เหมาะสำหรับผู้ฝึกสอนที่ต้องการควบคุมจังหวะการปล่อยตัว'}
-                                        {selectedMode === 'reflex' && 'มินิเกมฝึกปฏิกิริยาตอบสนอง กดปุ่มทันทีที่ได้ยินเสียงปล่อยตัว หากกดก่อนเสียงดังระบบจะแจ้งเตือนฟาวล์ พร้อมนาฬิกาจับเวลาในตัว'}
-                                        {selectedMode === 'direct_stopwatch' && 'เข้าสู่หน้าจอนาฬิกาจับเวลาโดยตรง สำหรับการจับเวลาแบบรวดเร็วโดยไม่ต้องรอสัญญาณปล่อยตัว'}
-                                        {selectedMode === 'pre_match' && 'เคล็ดลับและเทคนิคสำคัญที่นักกีฬาควรทบทวนเพื่อเตรียมความพร้อมก่อนวันแข่งขันจริง'}
-                                        {selectedMode === 'check_list' && 'รายการตรวจสอบสิ่งของและอุปกรณ์ที่จำเป็นต้องเตรียมไปในวันแข่งขัน เพื่อไม่ให้พลาดสิ่งสำคัญ'}
-                                        {selectedMode === 'user_profile' && 'ตรวจสอบสถานะสมาชิกบัญชีผู้ใช้งานของคุณ รวมถึงวันหมดอายุแพ็กเกจ PRO'}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div 
-                            onTouchStart={(e) => setTouchStartPos(e.targetTouches[0].clientX)}
-                            onTouchEnd={(e) => {
-                                if (!touchStartPos) return;
-                                const touchEnd = e.changedTouches[0].clientX;
-                                if (touchStartPos - touchEnd > 50) { btnClick(); setCurrentPage(p => Math.min(2, p + 1)); setSelectedMode(null); }
-                                if (touchStartPos - touchEnd < -50) { btnClick(); setCurrentPage(p => Math.max(0, p - 1)); setSelectedMode(null); }
-                                setTouchStartPos(null);
-                            }}
-                            className="w-full flex flex-col"
-                        >
-                            <div className="flex items-center w-full mb-4 space-x-4 flex-shrink-0">
-                                <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                                <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
-                                <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            </div>
-
-                            <div className="flex justify-between w-full gap-2 mb-3 flex-shrink-0 min-h-[120px]">
-                                {currentPage === 0 && (
-                                    <>
-                                        <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
-                                        <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard practice\nsequence." isProOnly={true} />
-                                        <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real competition\nfeel." isProOnly={true} />
-                                    </>
-                                )}
-                                {currentPage === 1 && (
-                                    <>
-                                        <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\ncontrol." isProOnly={true} />
-                                        <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction time\ntraining." isProOnly={true} />
-                                        <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOPWATCH" title2="" desc="Manual timing\nmode." isProOnly={true} />
-                                    </>
-                                )}
-                                {currentPage === 2 && (
-                                    <>
-                                        <ModeCard id="pre_match" icon={IcoLightbulb} title1="PRE MATCH" title2="TIPS" desc="Competition\nadvice." isProOnly={false} />
-                                        <ModeCard id="check_list" icon={IcoChecklist} title1="CHECK" title2="LIST" desc="Preparation\nitems." isProOnly={false} />
-                                        <ModeCard id="user_profile" icon={IcoPerson} title1="USER" title2="PROFILE" desc="Account\nsettings." isProOnly={false} />
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="flex justify-center space-x-2 mb-5">
-                                {[0, 1, 2].map(idx => (
-                                    <div key={idx} onClick={() => {btnClick(); setCurrentPage(idx); setSelectedMode(null);}} className={`w-2 h-2 rounded-full cursor-pointer transition-colors duration-300 ${currentPage === idx ? 'bg-[var(--neon)]' : 'bg-[#333]'}`}></div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <button onClick={() => selectedMode && handleMainStartClick()} className={`w-full py-2 rounded-2xl flex items-center justify-center space-x-2 flex-shrink-0 transition-all duration-300 ${selectedMode ? 'bg-[var(--neon)] text-black btn-press shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-[#111] text-[#444] border border-[#222] cursor-not-allowed'}`}>
-                            <IcoPlay size="42px" />
-                            <span className="font-sg-medium uppercase" style={{ fontSize: '50px' }}>START</span>
-                        </button>
-                        
-                        <div className="w-full flex justify-between items-center mt-3 pt-3 border-t border-[#222] flex-shrink-0">
-                            <div className="flex items-center space-x-5">
-                                {!user && (
-                                    <button onClick={() => setPopupType('login')} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
-                                        <span className="material-symbols-outlined" style={{fontSize: '14px'}}>login</span>
-                                        <span>Log In</span>
-                                    </button>
-                                )}
-                                <button onClick={handleClearCache} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
-                                    <span className="material-symbols-outlined" style={{fontSize: '14px'}}>sync</span>
-                                    <span>Update System</span>
-                                </button>
-                            </div>
-                            <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.0</span>
-                        </div>
-
-                        {renderPopup()}
-                    </div>
-                );
-            }
-
+            // 🌟 3. เรนเดอร์หน้าจอ Setup (ก่อนปล่อยตัว)
             if (screen === 'setup') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col p-5 bg-[#050505]">
@@ -1136,6 +876,102 @@
                 );
             }
 
+            // 🌟 4. เรนเดอร์หน้าจอ Stopwatch ตรงๆ
+            if (screen === 'stopwatch') {
+                return (
+                    <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-4 pb-6 bg-[#050505] relative">
+                        
+                        <div className="text-center mt-0 mb-2 flex flex-col items-center justify-center w-full flex-shrink-0">
+                            <h1 className="font-sg-bold text-white uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px' }}>STOP</h1>
+                            <h1 className="font-sg-bold text-neon uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px', marginTop: '4px' }}>WATCH</h1>
+                        </div>
+                        
+                        <div className="flex-1 flex flex-col items-center justify-center relative min-h-[260px] w-full">
+                            <div className="relative w-[280px] h-[280px] flex items-center justify-center">
+                                <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
+                                    <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
+                                    {Array.from({ length: 12 }).map((_, i) => {
+                                        const isMajor = i % 3 === 0; 
+                                        const angle = (i * 30) * (Math.PI / 180);
+                                        const r1 = isMajor ? 122 : 126; 
+                                        const r2 = 132; 
+                                        return (
+                                            <line key={`tick-${i}`} x1={150 + r1 * Math.sin(angle)} y1={150 - r1 * Math.cos(angle)} x2={150 + r2 * Math.sin(angle)} y2={150 - r2 * Math.cos(angle)} stroke={isMajor ? "#fff" : "#555"} strokeWidth={isMajor ? "3" : "1.5"} strokeLinecap="round" />
+                                        );
+                                    })}
+                                    <circle ref={ringCircleRef} cx="150" cy="150" r="140" fill="none" stroke="var(--neon)" strokeWidth="12" strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE} transform="rotate(-90 150 150)" style={{ transition: isStopwatchRunning ? 'none' : 'stroke-dashoffset 0.3s' }} />
+                                    {stopwatchHistory.map((item, idx) => { const angle = ((item.time % 60000) / 60000) * 360 - 90; const x = 150 + 140 * Math.cos(angle * Math.PI / 180); const y = 150 + 140 * Math.sin(angle * Math.PI / 180); return (<circle key={idx} cx={x} cy={y} r="5" fill="var(--neon)" stroke="#050505" strokeWidth="2" />); })}
+                                </svg>
+                                
+                                <div className="absolute text-center z-10 translate-y-1">
+                                    <span ref={timeTextRef} className="text-white font-bebas tabular-nums" style={{ fontSize: '52px', letterSpacing: '0.04em' }}>{formatTime(finalTime, 'colon')}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex w-full space-x-3 h-[85px] mb-4 mt-4 flex-shrink-0">
+                            {isCooldown ? (
+                                <button className="flex-1 bg-[#222] text-[#555] border border-[#333] rounded-2xl flex items-center justify-center cursor-not-allowed transition-all duration-300">
+                                    <span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>START</span>
+                                </button>
+                            ) : (
+                                // 🌟 แก้บั๊กหน้า STOPWATCH เปล่า: เช็ค selectedMode ว่าเป็นโหมดอะไรเพื่อสั่งเริ่มถูกฟังก์ชัน
+                                <button onClick={() => btnClick(() => { 
+                                    if (isStopwatchRunning) { 
+                                        handleStopwatchAction('stop'); 
+                                    } else { 
+                                        if (selectedMode === 'direct_stopwatch') {
+                                            raceStartTime.current = Date.now();
+                                            setIsStopwatchRunning(true);
+                                            setIsNewSession(true);
+                                        } else {
+                                            startSequence(); 
+                                        }
+                                    } 
+                                })} className="flex-1 bg-[var(--neon)] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)] transition-all duration-300">
+                                    {isStopwatchRunning && <div className="w-5 h-5 bg-black rounded-sm mr-4"></div>}<span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>{isStopwatchRunning ? 'STOP' : 'START'}</span>
+                                </button>
+                            )}
+                            
+                            {isStopwatchRunning && !isCooldown && (
+                                <button onClick={() => btnClick(() => handleStopwatchAction('lap'))} className="w-[100px] bg-[#FFEA00] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(255,234,0,0.2)] transition-all duration-300"><span className="font-sg-expanded-medium uppercase" style={{ fontSize: '24px', letterSpacing: '0.1em', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LAP</span></button>
+                            )}
+                        </div>
+                        
+                        <div className="flex items-center w-full mb-3 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                            <span className="text-neon font-sg-regular uppercase mx-4" style={{ fontSize: '14px' }}>RECENT STATISTICS</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                        </div>
+                        
+                        <div className="border border-[#333] rounded-2xl px-4 py-3 flex justify-between w-full h-[205px] flex-shrink-0">
+                            <div className="flex-1 flex flex-col relative mr-4 pt-1">
+                                <span className="absolute -left-1 top-[5px] text-[10px] text-white font-mont-bold uppercase tracking-wider">LAST</span>
+                                <div className="flex flex-col items-center justify-start w-full space-y-1.5">
+                                    {stopwatchHistory.length === 0 ? (
+                                        <div className="flex-1 flex items-center justify-center w-full mt-10">
+                                            <span className="text-zinc-600 font-mont-medium text-xs italic">- ยังไม่มีสถิติ -</span>
+                                        </div>
+                                    ) : (
+                                        stopwatchHistory.map((item, idx) => (
+                                            <div key={idx} className="flex justify-center items-center w-full border-b border-dashed border-[#222] pb-0.5 h-[28px]">
+                                                {historyMode === 'lap' && <span className="text-white font-sg-bold text-sm w-[20px] text-right mr-3">{item.lap}:</span>}
+                                                <span className="text-white font-mont-regular tabular-nums tracking-wider text-[15px]">{formatTime(item.time, 'dot')}</span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex flex-col w-[100px] justify-between h-full pt-1">
+                                <button onClick={() => btnClick(clearHistory)} className="bg-[var(--neon)] text-black rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[42px] flex items-center justify-center">CLEAR</button>
+                                <button onClick={() => btnClick(reset)} className="bg-[#cc0000] text-white rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[50px] flex items-center justify-center mt-auto mb-1">EXIT</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 🌟 5. เรนเดอร์หน้าจอ Running (กำลังปล่อยตัว)
             if (screen === 'running') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
@@ -1174,6 +1010,150 @@
                 );
             }
 
+            // 🌟 6. Default Render: หน้า Menu หลัก
+            return (
+                <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
+                    
+                    <div className="flex justify-between items-center w-full pt-2 flex-shrink-0">
+                        <div className="w-24 flex justify-start items-center">
+                            <div onClick={() => btnClick(() => setPopupType('share'))} className="cursor-pointer btn-press flex flex-col items-center justify-center leading-[0.9]">
+                                <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">TIPS &</span>
+                                <span className="text-[#FFEA00] font-sg-bold uppercase text-[14px] tracking-wide">SHARE</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-center justify-center flex-1" onClick={handleStopwatchToggle}>
+                            <div className="flex items-center space-x-1.5 mb-[3px] cursor-pointer">
+                                <span className={`material-symbols-outlined ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '22px'}}>timer</span>
+                                <div className={`w-[44px] h-[22px] rounded-full relative transition-colors duration-300 ${!isPro ? 'bg-[#333]' : isStopwatchOn ? 'bg-[var(--neon)]' : 'bg-[#ff3b30]'}`}>
+                                    <div className={`absolute top-[3px] w-[16px] h-[16px] bg-white rounded-full transition-transform duration-300 flex items-center justify-center ${isStopwatchOn && isPro ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}><span className={`font-mont-bold ${isStopwatchOn && isPro ? 'text-[var(--neon)]' : 'text-[#333]'}`} style={{fontSize: '10px', lineHeight: '1'}}>{!isPro ? <span className="material-symbols-outlined" style={{fontSize: '10px', color: '#666'}}>lock</span> : 'I'}</span></div>
+                                </div>
+                            </div>
+                            <span className={`font-sg-light tracking-widest uppercase ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '10px'}}>STOPWATCH</span>
+                        </div>
+
+                        <div className="w-24 flex justify-end items-center">
+                            <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>
+                                {isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-3 mb-1 flex flex-col items-center justify-center w-full flex-shrink-0">
+                        <h1 className="font-sg-bold text-white uppercase leading-[0.85]" style={{ fontSize: '50px' }}>SWIM</h1>
+                        <h1 className="font-sg-bold text-neon uppercase leading-[0.85]" style={{ fontSize: '50px', marginTop: '2px' }}>START</h1>
+                        
+                        <div className="flex items-center justify-center mt-[8px]">
+                            <div className="font-sg-light text-white uppercase tracking-[0.4em]" style={{ fontSize: '20px', marginRight: '-0.4em' }}>TRAINER</div>
+                            {isPro ? (
+                                <div onClick={() => btnClick(() => setPopupType('profile'))} className={`ml-3 px-1.5 py-0.5 rounded-sm flex items-center justify-center cursor-pointer btn-press ${isWarning ? 'bg-[#ff3b30] animate-breathing-red' : 'bg-[var(--neon)] animate-breathing'}`}>
+                                    <span className="font-mont-bold text-black leading-none" style={{fontSize: '11px', letterSpacing: '0.05em'}}>PRO</span>
+                                </div>
+                            ) : (
+                                <div onClick={() => btnClick(() => setPopupType(user ? 'buy' : 'login'))} className="ml-3 px-1.5 py-0.5 rounded-sm flex items-center justify-center cursor-pointer btn-press bg-[#ff3b30] shadow-[0_0_10px_rgba(255,59,48,0.5)]">
+                                    <span className="font-mont-bold text-white leading-none" style={{fontSize: '11px', letterSpacing: '0.05em'}}>FREE</span>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {isPro && isWarning && daysLeft !== null && (
+                            <p className="text-[#ff3b30] font-mont-medium mt-2" style={{fontSize: '10px'}}>
+                                Your PRO subscription will expire in {daysLeft} day{daysLeft !== 1 ? 's' : ''}.
+                            </p>
+                        )}
+                    </div>
+
+                    {!isStandalone && (
+                        <div onClick={handleInstallClick} className="w-full bg-[#ff3b30] rounded-[100px] py-1 px-2 mb-2 mt-1 flex items-center justify-center cursor-pointer btn-press shadow-[0_0_10px_rgba(255,59,48,0.4)] flex-shrink-0">
+                            <span className="text-white font-kanit-regular tracking-wide text-center uppercase" style={{ fontSize: '10px' }}>
+                                CLICK : INSTALL FOR BEST PERFORMANCE (กดติดตั้งเพื่อใช้งานได้เต็มประสิทธิภาพ)
+                            </span>
+                        </div>
+                    )}
+
+                    {/* 🌟 ขยับ Hero Image และ DIVE MODE ให้ชิดกันมากขึ้น */}
+                    <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] mt-2 mb-3 min-h-[120px]">
+                        <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
+                    </div>
+
+                    <div 
+                        onTouchStart={(e) => setTouchStartPos(e.targetTouches[0].clientX)}
+                        onTouchEnd={(e) => {
+                            if (!touchStartPos) return;
+                            const touchEnd = e.changedTouches[0].clientX;
+                            if (touchStartPos - touchEnd > 50) { btnClick(); setCurrentPage(p => Math.min(2, p + 1)); setSelectedMode(null); }
+                            if (touchStartPos - touchEnd < -50) { btnClick(); setCurrentPage(p => Math.max(0, p - 1)); setSelectedMode(null); }
+                            setTouchStartPos(null);
+                        }}
+                        className="w-full flex flex-col"
+                    >
+                        {/* 🌟 Header DIVE MODE ตามแบบ */}
+                        <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
+                            <span className="text-[var(--neon)] font-sg-bold uppercase tracking-widest" style={{ fontSize: '15px' }}>{modeTitles[currentPage]}</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
+                        </div>
+
+                        <div className="flex justify-between w-full gap-2 flex-shrink-0">
+                            {currentPage === 0 && (
+                                <>
+                                    <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
+                                    <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard practice\nsequence." isProOnly={true} />
+                                    <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real competition\nfeel." isProOnly={true} />
+                                </>
+                            )}
+                            {currentPage === 1 && (
+                                <>
+                                    <ModeCard id="manual" icon={IcoHand} title1="MANUAL" title2="MODE" desc="Step-by-step\ncontrol." isProOnly={true} />
+                                    <ModeCard id="reflex" icon={IcoQuick} title1="REFLEX" title2="BODY" desc="Reaction time\ntraining." isProOnly={true} />
+                                    <ModeCard id="direct_stopwatch" icon={IcoTimer} title1="STOPWATCH" title2="" desc="Manual timing\nmode." isProOnly={true} />
+                                </>
+                            )}
+                            {currentPage === 2 && (
+                                <>
+                                    <ModeCard id="pre_match" icon={IcoLightbulb} title1="PRE MATCH" title2="TIPS" desc="Competition\nadvice." isProOnly={false} />
+                                    <ModeCard id="check_list" icon={IcoChecklist} title1="CHECK" title2="LIST" desc="Preparation\nitems." isProOnly={false} />
+                                    <ModeCard id="user_profile" icon={IcoPerson} title1="USER" title2="PROFILE" desc="Account\nsettings." isProOnly={false} />
+                                </>
+                            )}
+                        </div>
+
+                        {/* 🌟 Pagination Dots ขีด/จุด ตามแบบกราฟิก */}
+                        <div className="flex justify-center items-center space-x-1.5 mt-3 mb-5">
+                            {[0, 1, 2].map(idx => (
+                                <div 
+                                    key={idx} 
+                                    onClick={() => {btnClick(); setCurrentPage(idx); setSelectedMode(null);}} 
+                                    className={`rounded-full cursor-pointer transition-all duration-300 ${currentPage === idx ? 'w-6 h-2 bg-[var(--neon)]' : 'w-2 h-2 bg-[#444]'}`}
+                                ></div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button onClick={() => selectedMode && handleMainStartClick()} className={`w-full py-2 rounded-2xl flex items-center justify-center space-x-2 flex-shrink-0 transition-all duration-300 ${selectedMode ? 'bg-[var(--neon)] text-black btn-press shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-[#111] text-[#444] border border-[#222] cursor-not-allowed'}`}>
+                        <IcoPlay size="42px" />
+                        <span className="font-sg-medium uppercase" style={{ fontSize: '50px' }}>START</span>
+                    </button>
+                    
+                    <div className="w-full flex justify-between items-center mt-3 pt-3 border-t border-[#222] flex-shrink-0">
+                        <div className="flex items-center space-x-5">
+                            {!user && (
+                                <button onClick={() => setPopupType('login')} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
+                                    <span className="material-symbols-outlined" style={{fontSize: '14px'}}>login</span>
+                                    <span>Log In</span>
+                                </button>
+                            )}
+                            <button onClick={handleClearCache} className="text-[var(--neon)] font-mont-medium text-[10px] uppercase tracking-wider btn-press flex items-center space-x-1">
+                                <span className="material-symbols-outlined" style={{fontSize: '14px'}}>sync</span>
+                                    <span>Update System</span>
+                            </button>
+                        </div>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.0</span>
+                    </div>
+
+                    {renderPopup()}
+                </div>
+            );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
