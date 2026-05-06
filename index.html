@@ -138,14 +138,7 @@
 
             const [screen, setScreen] = useState('menu');
             const [selectedMode, setSelectedMode] = useState(null); 
-            
-            // 🌟 เปิดแอปมารีเซ็ตโหมด Auto เป็น ON เสมอ
-            const [isAutoMode, setIsAutoMode] = useState(true);
-
-            // 🌟 แก้บั๊กความจำสั้นด้วย useRef ดักจับค่า STOPWATCH ให้ตรงเป๊ะเสี้ยววินาที
             const [isStopwatchOn, setIsStopwatchOn] = useState(() => { const saved = localStorage.getItem('isStopwatchOn'); return saved !== null ? JSON.parse(saved) : false; });
-            const isStopwatchOnRef = useRef(isStopwatchOn);
-
             const [isUiMuted, setIsUiMuted] = useState(() => { const saved = localStorage.getItem('isUiMuted'); return saved !== null ? JSON.parse(saved) : false; });
             const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
             const [isNewSession, setIsNewSession] = useState(false);
@@ -224,20 +217,17 @@
                                     localStorage.setItem('proExpireDate', expireDateStr); 
                                 } else {
                                     setIsPro(false);
-                                    setIsStopwatchOn(false);
                                     localStorage.removeItem('proExpireDate');
                                     setPopupType('expired'); 
                                 }
                             } else {
                                 setIsPro(false);
-                                setIsStopwatchOn(false);
                                 localStorage.removeItem('proExpireDate');
                             }
                         }).catch(err => console.log('Offline / Fetch Error:', err));
                     } else {
                         setUser(null);
                         setIsPro(false);
-                        setIsStopwatchOn(false);
                         localStorage.removeItem('proExpireDate');
                     }
                     setAuthLoading(false);
@@ -245,14 +235,8 @@
                 return () => unsubscribe();
             }, []);
 
-            // 🌟 อัปเดต Reference ทุกครั้งที่ค่าเปลี่ยน เพื่อให้โค้ด Async อ่านค่าปัจจุบันได้แม่นๆ
-            useEffect(() => { 
-                isStopwatchOnRef.current = isStopwatchOn;
-                localStorage.setItem('isStopwatchOn', JSON.stringify(isStopwatchOn)); 
-            }, [isStopwatchOn]);
-            
+            useEffect(() => { localStorage.setItem('isStopwatchOn', JSON.stringify(isStopwatchOn)); }, [isStopwatchOn]);
             useEffect(() => { localStorage.setItem('isUiMuted', JSON.stringify(isUiMuted)); }, [isUiMuted]);
-            
             useEffect(() => {
                 const storedNames = JSON.parse(localStorage.getItem('swimmerNamesList')) || []; setSavedNames(storedNames);
                 const storedStopHistory = JSON.parse(localStorage.getItem('persistentStopHistory'));
@@ -344,7 +328,6 @@
                 btnClick(() => {
                     setPopupType(null);
                     auth.signOut();
-                    setIsStopwatchOn(false);
                     setScreen('menu');
                 });
             };
@@ -389,16 +372,11 @@
                 }
             };
 
-            // 🌟 แก้บั๊ก: อัปเดต Ref แบบ Instant ทันทีที่กด เพื่อกันเหนียวให้ระบบรู้ตัวทัน
             const handleStopwatchToggle = () => {
                 btnClick(() => {
                     if (!user) { setPopupType('login'); return; }
                     if (!isPro) { setPopupType('buy'); return; }
-                    setIsStopwatchOn(prev => {
-                        const newVal = !prev;
-                        isStopwatchOnRef.current = newVal;
-                        return newVal;
-                    });
+                    setIsStopwatchOn(!isStopwatchOn);
                 });
             };
 
@@ -444,8 +422,15 @@
 
                 if (isEnding) {
                     playEndBeep(); 
-                    if (typeof navigator !== 'undefined' && navigator.vibrate) { try { navigator.vibrate(1500); } catch(e) {} }
-                    setIsCooldown(true); setTimeout(() => { setIsCooldown(false); }, 1500);
+                    
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                        try { navigator.vibrate(1500); } catch(e) {} 
+                    }
+                    
+                    setIsCooldown(true); 
+                    setTimeout(() => {
+                        setIsCooldown(false); 
+                    }, 1500);
                 }
             };
 
@@ -505,12 +490,11 @@
             const startSequence = async () => {
                 getAudioContext(); cancelRef.current = false; setScreen('running'); setStep(0); checkAndClearLapHistory();
                 try {
-                    // 🌟 แก้บั๊กความจำสั้น: เปลี่ยนไปใช้ isStopwatchOnRef.current เพื่อให้ระบบดึงค่าที่กดล่าสุดไปใช้จริงๆ 100%
                     if (selectedMode === 'quick') {
                         setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('take your marks', 'en-US', 0.85, true); checkCancel(); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
                         setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
-                        if (isStopwatchOnRef.current) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
-                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOnRef.current) { setScreen('stopwatch'); return; }
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
                     } else if (selectedMode === 'ready') {
                         setStep(1); setStatusText('3 SHORT WHISTLES'); setSubText('GET READY'); setSubTextTh('เตรียมความพร้อม');
                         for (let i = 0; i < 3; i++) { checkCancel(); playWhistle(0.15); await sleep(400); } await sleep(Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000); checkCancel();
@@ -518,8 +502,8 @@
                         if (readyStyle === 'backstroke') { checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); await sleep(3500); } checkCancel();
                         setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('Take your marks', 'en-US', 0.85, true); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
                         setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
-                        if (isStopwatchOnRef.current) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
-                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOnRef.current) { setScreen('stopwatch'); return; }
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
                     } else if (selectedMode === 'race') {
                         setStep(0); const evt = EVENTS.find(e => e.id === raceEvent); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); await sleep(500); checkCancel(); setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
                         let laneText = ""; for (let i = 1; i <= 5; i++) { const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; } await speak(laneText, 'th-TH', 0.95); await sleep(1000); checkCancel();
@@ -528,8 +512,8 @@
                         if (evt.style === 'backstroke' || evt.id === 'relay_med') { checkCancel(); setStatusText('2ND LONG WHISTLE'); setSubText('TAKE POSITION'); setSubTextTh('ประจำที่'); playWhistle(0.8); await sleep(3500); } checkCancel();
                         setStep(3); setStatusText('TAKE YOUR MARKS...'); setSubText('READY'); setSubTextTh('เตรียมตัว...'); await speak('Take your marks', 'en-US', 0.85, true); await sleep(Math.floor(Math.random() * (2000 - 800 + 1)) + 800); checkCancel();
                         setStep(4); setStatusText('GO!'); setSubText('GO!'); setSubTextTh('ไป'); playBeep();
-                        if (isStopwatchOnRef.current) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
-                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOnRef.current) { setScreen('stopwatch'); return; }
+                        if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
+                        await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
                     }
                     reset();
                 } catch (e) {}
@@ -681,6 +665,7 @@
                                 </div>
                             )}
 
+                            {/* 🌟 ปรับปรุง Popup หน้า SHARE ใหม่ให้ตรงตามแบบภาพ 100% */}
                             {popupType === 'share' && (
                                 <div className="w-full flex flex-col mt-1">
                                     <h3 className="text-[var(--neon)] font-sg-bold text-[22px] mb-4 text-left tracking-wide uppercase">SHARE LINK</h3>
@@ -795,8 +780,7 @@
                             </div>
                         )}
 
-                        {/* ขยับ Hero Image ขึ้นมาให้กระชับขึ้น */}
-                        <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] my-3 min-h-[140px]">
+                        <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] my-4 min-h-[140px]">
                             {!selectedMode ? (
                                 <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
                             ) : (
@@ -823,23 +807,13 @@
                             )}
                         </div>
 
-                        {/* 🌟 ดึง SELECT MODE ขึ้น และจัดวางปุ่ม AUTO ให้ตรงตามแบบ */}
-                        <div className="flex flex-col items-center w-full mb-3 flex-shrink-0">
-                            <div className="flex items-center w-full mb-2">
-                                <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                                <span className="text-neon font-sg-regular uppercase mx-4" style={{ fontSize: '16px' }}>SELECT MODE</span>
-                                <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            </div>
-                            
-                            <div onClick={() => btnClick(() => setIsAutoMode(prev => !prev))} className="flex items-center justify-center space-x-2 cursor-pointer btn-press mt-1">
-                                <span className={`font-sg-bold uppercase tracking-widest ${isAutoMode ? 'text-[var(--neon)]' : 'text-[#666]'}`} style={{ fontSize: '10px' }}>AUTO : {isAutoMode ? 'ON' : 'OFF'}</span>
-                                <div className={`w-[26px] h-[12px] rounded-full relative transition-colors duration-300 ${isAutoMode ? 'bg-[var(--neon)]' : 'bg-[#333]'}`}>
-                                    <div className={`absolute top-[1px] w-[10px] h-[10px] bg-white rounded-full transition-transform duration-300 ${isAutoMode ? 'translate-x-[15px]' : 'translate-x-[1px]'}`}></div>
-                                </div>
-                            </div>
+                        <div className="flex items-center w-full mb-4 space-x-4 flex-shrink-0">
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
+                            <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>SELECT MODE</span>
+                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
                         </div>
 
-                        <div className="flex justify-between w-full gap-2 mb-3 flex-shrink-0">
+                        <div className="flex justify-between w-full gap-2 mb-5 flex-shrink-0">
                             <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
                             <ModeCard id="ready" icon={IcoWhistle} title1="GET" title2="READY" desc="Standard practice\nsequence." isProOnly={true} />
                             <ModeCard id="race" icon={IcoTrophy} title1="RACE" title2="MODE" desc="Real competition\nfeel." isProOnly={true} />
@@ -863,7 +837,7 @@
                                     <span>Update System</span>
                                 </button>
                             </div>
-                            <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.0.1</span>
+                            <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.0.0</span>
                         </div>
 
                         {renderPopup()}
@@ -926,27 +900,18 @@
                                 {step === 4 ? (<><h1 className="text-neon font-sg-bold tracking-widest leading-none" style={{ fontSize: '64px', textShadow: '0 0 10px rgba(200,255,0,0.7)' }}>GO!</h1><p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>ไป</p></>) : (<><p className="text-neon font-sg-bold uppercase" style={{ fontSize: '32px', lineHeight: '1.2', letterSpacing: '0.05em' }}>{subText}</p>{subTextTh && <p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>{subTextTh}</p>}</>)}
                             </div>
                         </div>
-                        
-                        {/* 🌟 4. ดึง STOPWATCH ลงมาไว้เหนือปุ่ม STOP เรียงตัวตามแบบภาพเป๊ะๆ */}
                         <div className="mt-auto pt-2 flex-shrink-0 flex flex-col items-center">
-                            <div onClick={handleStopwatchToggle} className="flex items-center justify-center space-x-2 mb-4 cursor-pointer btn-press">
-                                <span className={`font-sg-regular tracking-widest uppercase ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '18px'}}>STOPWATCH</span>
-                                <span className={`material-symbols-outlined mx-1 ${!isPro ? 'text-[#666]' : 'text-white'}`} style={{fontSize: '28px'}}>timer</span>
-                                <div className={`w-[60px] h-[28px] rounded-full relative transition-colors duration-300 ${!isPro ? 'bg-[#333]' : isStopwatchOn ? 'bg-[var(--neon)]' : 'bg-[#ff3b30]'}`}>
-                                    <div className={`absolute top-[2px] w-[24px] h-[24px] bg-white rounded-full transition-transform duration-300 flex items-center justify-center ${isStopwatchOn && isPro ? 'translate-x-[34px]' : 'translate-x-[2px]'}`}>
-                                        <span className={`font-mont-bold ${isStopwatchOn && isPro ? 'text-[var(--neon)]' : 'text-[#333]'}`} style={{fontSize: '12px', lineHeight: '1'}}>{!isPro ? <span className="material-symbols-outlined" style={{fontSize: '12px', color: '#666'}}>lock</span> : 'I'}</span>
-                                    </div>
-                                </div>
+                            <div className="flex items-center justify-center space-x-2 mb-4">
+                                <span className={`material-symbols-outlined ${isStopwatchOn ? 'text-[var(--neon)]' : 'text-[#ff3b30]'}`} style={{fontSize: '22px'}}>timer</span>
+                                <span className={`font-sg-bold uppercase ${isStopwatchOn ? 'text-[var(--neon)]' : 'text-[#ff3b30]'}`} style={{fontSize: '14px', letterSpacing: '0.1em'}}>
+                                    STOPWATCH : {isStopwatchOn ? 'ON' : 'OFF'}
+                                </span>
                             </div>
-
                             <button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press">
                                 <div className="w-5 h-5 bg-black rounded-sm"></div>
                                 <span className="tracking-widest">STOP</span>
                             </button>
                         </div>
-                        
-                        {/* 🌟 ป้องกันบัก Popup ค้างตอนเปิดจับเวลาฟรี */}
-                        {renderPopup()}
                     </div>
                 );
             }
