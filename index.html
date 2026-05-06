@@ -884,122 +884,38 @@
                 );
             }
 
-            if (screen === 'stopwatch') {
+            if (screen === 'running') {
                 return (
-                    <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-4 pb-6 bg-[#050505] relative">
-                        
-                        <div className="text-center mt-0 mb-2 flex flex-col items-center justify-center w-full flex-shrink-0">
-                            <h1 className="font-sg-bold text-white uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px' }}>STOP</h1>
-                            <h1 className="font-sg-bold text-neon uppercase leading-[0.85] tracking-wide" style={{ fontSize: '48px', marginTop: '4px' }}>WATCH</h1>
+                    <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
+                        <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                            <button onClick={() => btnClick(reset)} className="text-white btn-press mr-4 flex items-center justify-center"><IcoBack /></button>
+                            <div className="flex space-x-2 relative">{[1, 2, 3, 4].map(n => <div key={n} className={`w-3 h-3 rounded-full transition-all ${step >= n ? 'bg-[var(--neon)] shadow-[0_0_10px_var(--neon)]' : 'bg-[#333]'}`}></div>)}</div>
+                            <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`w-8 h-8 flex items-center justify-center btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>{isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}</button>
                         </div>
-                        
-                        <div className="flex-1 flex flex-col items-center justify-center relative min-h-[260px] w-full">
-                            <div className="relative w-[280px] h-[280px] flex items-center justify-center">
-                                <svg viewBox="0 0 300 300" className="absolute inset-0 w-full h-full">
-                                    <circle cx="150" cy="150" r="140" fill="#151515" stroke="#222" strokeWidth="12" />
-                                    
-                                    {Array.from({ length: 12 }).map((_, i) => {
-                                        const isMajor = i % 3 === 0; 
-                                        const angle = (i * 30) * (Math.PI / 180);
-                                        const r1 = isMajor ? 122 : 126; 
-                                        const r2 = 132; 
-                                        return (
-                                            <line
-                                                key={`tick-${i}`}
-                                                x1={150 + r1 * Math.sin(angle)}
-                                                y1={150 - r1 * Math.cos(angle)}
-                                                x2={150 + r2 * Math.sin(angle)}
-                                                y2={150 - r2 * Math.cos(angle)}
-                                                stroke={isMajor ? "#fff" : "#555"}
-                                                strokeWidth={isMajor ? "3" : "1.5"}
-                                                strokeLinecap="round"
-                                            />
-                                        );
-                                    })}
-                                    
-                                    <circle ref={ringCircleRef} cx="150" cy="150" r="140" fill="none" stroke="var(--neon)" strokeWidth="12" strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={CIRCUMFERENCE} transform="rotate(-90 150 150)" style={{ transition: isStopwatchRunning ? 'none' : 'stroke-dashoffset 0.3s' }} />
-                                    {stopwatchHistory.map((item, idx) => { const angle = ((item.time % 60000) / 60000) * 360 - 90; const x = 150 + 140 * Math.cos(angle * Math.PI / 180); const y = 150 + 140 * Math.sin(angle * Math.PI / 180); return (<circle key={idx} cx={x} cy={y} r="5" fill="var(--neon)" stroke="#050505" strokeWidth="2" />); })}
-                                </svg>
-                                
-                                <div className="absolute text-center z-10 translate-y-1">
-                                    <span ref={timeTextRef} className="text-white font-bebas tabular-nums" style={{ fontSize: '52px', letterSpacing: '0.04em' }}>{formatTime(finalTime, 'colon')}</span>
-                                </div>
+                        <div className="text-center mb-6 flex-shrink-0"><h2 className="text-neon font-sg-bold text-xl uppercase mt-1">{selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : 'RACE MODE'}</h2><p className="text-white text-sm font-bold tracking-widest uppercase mt-1">STEP {step} OF 4</p></div>
+                        <div className="text-center mb-6 h-10 flex-shrink-0 flex items-center justify-center"><h3 className="text-white font-sg-bold text-3xl tracking-widest uppercase">{statusText}</h3></div>
+                        <div className="flex-1 flex flex-col items-center justify-center relative mt-2 mb-6">
+                            {step === 0 && selectedMode === 'race' && (<IcoAnnounce />)}{step === 1 && (<IcoShortWhistles />)}{step === 2 && (<IcoLongWhistle />)}{step === 3 && (<IcoTakeMarks />)}{step === 4 && (<div className="relative flex items-center justify-center"><div className="absolute w-40 h-40 border border-[var(--neon)] rounded-full animate-ping opacity-20"></div><div className="absolute w-32 h-32 border-2 border-[var(--neon)] rounded-full animate-pulse opacity-50"></div><div className="w-24 h-24 rounded-full border-4 border-[var(--neon)] flex items-center justify-center shadow-[0_0_15px_rgba(200,255,0,0.6)] text-neon"><IcoSpeaker /></div></div>)}
+                            <div className="min-h-[80px] mt-6 text-center flex flex-col items-center justify-start flex-shrink-0">
+                                {step === 4 ? (<><h1 className="text-neon font-sg-bold tracking-widest leading-none" style={{ fontSize: '64px', textShadow: '0 0 10px rgba(200,255,0,0.7)' }}>GO!</h1><p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>ไป</p></>) : (<><p className="text-neon font-sg-bold uppercase" style={{ fontSize: '32px', lineHeight: '1.2', letterSpacing: '0.05em' }}>{subText}</p>{subTextTh && <p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>{subTextTh}</p>}</>)}
                             </div>
                         </div>
-
-                        <div className="flex w-full space-x-3 h-[85px] mb-4 mt-4 flex-shrink-0">
-                            {isCooldown ? (
-                                <button className="flex-1 bg-[#222] text-[#555] border border-[#333] rounded-2xl flex items-center justify-center cursor-not-allowed transition-all duration-300">
-                                    <span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>START</span>
-                                </button>
-                            ) : (
-                                <button onClick={() => btnClick(() => { if (isStopwatchRunning) { handleStopwatchAction('stop'); } else { startSequence(); } })} className="flex-1 bg-[var(--neon)] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(200,255,0,0.2)] transition-all duration-300">
-                                    {isStopwatchRunning && <div className="w-5 h-5 bg-black rounded-sm mr-4"></div>}<span className="font-sg-expanded-medium uppercase tracking-widest" style={{ fontSize: '40px' }}>{isStopwatchRunning ? 'STOP' : 'START'}</span>
-                                </button>
-                            )}
-                            
-                            {isStopwatchRunning && !isCooldown && (
-                                <button onClick={() => btnClick(() => handleStopwatchAction('lap'))} className="w-[100px] bg-[#FFEA00] text-black rounded-2xl flex items-center justify-center btn-press shadow-[0_0_15px_rgba(255,234,0,0.2)] transition-all duration-300"><span className="font-sg-expanded-medium uppercase" style={{ fontSize: '24px', letterSpacing: '0.1em', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LAP</span></button>
-                            )}
-                        </div>
-                        
-                        <div className="flex items-center w-full mb-3 flex-shrink-0">
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            <span className="text-neon font-sg-regular uppercase mx-4" style={{ fontSize: '14px' }}>RECENT STATISTICS</span>
-                            <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                        </div>
-                        
-                        <div className="border border-[#333] rounded-2xl px-4 py-3 flex justify-between w-full h-[205px] flex-shrink-0">
-                            
-                            <div className="flex-1 flex flex-col relative mr-4 pt-1">
-                                <span className="absolute -left-1 top-[5px] text-[10px] text-white font-mont-bold uppercase tracking-wider">LAST</span>
-                                
-                                <div className="flex flex-col items-center justify-start w-full space-y-1.5">
-                                    {stopwatchHistory.length === 0 ? (
-                                        <div className="flex-1 flex items-center justify-center w-full mt-10">
-                                            <span className="text-zinc-600 font-mont-medium text-xs italic">- ยังไม่มีสถิติ -</span>
-                                        </div>
-                                    ) : (
-                                        stopwatchHistory.map((item, idx) => (
-                                            <div key={idx} className="flex justify-center items-center w-full border-b border-dashed border-[#222] pb-0.5 h-[28px]">
-                                                {historyMode === 'lap' && (
-                                                    <span className="text-white font-sg-bold text-sm w-[20px] text-right mr-3">{item.lap}:</span>
-                                                )}
-                                                <span className="text-white font-mont-regular tabular-nums tracking-wider text-[15px]">{formatTime(item.time, 'dot')}</span>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                        <div className="mt-auto pt-2 flex-shrink-0">
+                            <div className="flex items-center justify-center space-x-1.5 mb-3">
+                                <span className={`material-symbols-outlined ${isStopwatchOn ? 'text-[var(--neon)]' : 'text-[#ff3b30]'}`} style={{fontSize: '20px'}}>timer</span>
+                                <span className={`font-sg-bold uppercase tracking-widest ${isStopwatchOn ? 'text-[var(--neon)]' : 'text-[#ff3b30]'}`} style={{fontSize: '12px'}}>
+                                    STOPWATCH : {isStopwatchOn ? 'ON' : 'OFF'}
+                                </span>
                             </div>
-                            
-                            <div className="flex flex-col w-[100px] justify-between h-full pt-1">
-                                <button onClick={() => btnClick(clearHistory)} className="bg-[var(--neon)] text-black rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[42px] flex items-center justify-center">CLEAR</button>
-                                <button onClick={() => btnClick(reset)} className="bg-[#cc0000] text-white rounded-xl py-0 font-sg-bold uppercase tracking-wider text-sm btn-press h-[50px] flex items-center justify-center mt-auto mb-1">EXIT</button>
-                            </div>
-
+                            <button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press">
+                                <div className="w-5 h-5 bg-black rounded-sm"></div>
+                                <span className="tracking-widest">STOP</span>
+                            </button>
                         </div>
                     </div>
                 );
             }
 
-            return (
-                <div className="h-dvh w-full max-w-md mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505]">
-                    <div className="flex justify-between items-center mb-6 flex-shrink-0">
-                        <button onClick={() => btnClick(reset)} className="text-white btn-press mr-4 flex items-center justify-center"><IcoBack /></button>
-                        <div className="flex space-x-2 relative">{[1, 2, 3, 4].map(n => <div key={n} className={`w-3 h-3 rounded-full transition-all ${step >= n ? 'bg-[var(--neon)] shadow-[0_0_10px_var(--neon)]' : 'bg-[#333]'}`}></div>)}</div>
-                        <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`w-8 h-8 flex items-center justify-center btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>{isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}</button>
-                    </div>
-                    <div className="text-center mb-6 flex-shrink-0"><h2 className="text-neon font-sg-bold text-xl uppercase mt-1">{selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : 'RACE MODE'}</h2><p className="text-white text-sm font-bold tracking-widest uppercase mt-1">STEP {step} OF 4</p></div>
-                    <div className="text-center mb-6 h-10 flex-shrink-0 flex items-center justify-center"><h3 className="text-white font-sg-bold text-3xl tracking-widest uppercase">{statusText}</h3></div>
-                    <div className="flex-1 flex flex-col items-center justify-center relative mt-2 mb-6">
-                        {step === 0 && selectedMode === 'race' && (<IcoAnnounce />)}{step === 1 && (<IcoShortWhistles />)}{step === 2 && (<IcoLongWhistle />)}{step === 3 && (<IcoTakeMarks />)}{step === 4 && (<div className="relative flex items-center justify-center"><div className="absolute w-40 h-40 border border-[var(--neon)] rounded-full animate-ping opacity-20"></div><div className="absolute w-32 h-32 border-2 border-[var(--neon)] rounded-full animate-pulse opacity-50"></div><div className="w-24 h-24 rounded-full border-4 border-[var(--neon)] flex items-center justify-center shadow-[0_0_15px_rgba(200,255,0,0.6)] text-neon"><IcoSpeaker /></div></div>)}
-                        <div className="min-h-[80px] mt-6 text-center flex flex-col items-center justify-start flex-shrink-0">
-                            {step === 4 ? (<><h1 className="text-neon font-sg-bold tracking-widest leading-none" style={{ fontSize: '64px', textShadow: '0 0 10px rgba(200,255,0,0.7)' }}>GO!</h1><p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>ไป</p></>) : (<><p className="text-neon font-sg-bold uppercase" style={{ fontSize: '32px', lineHeight: '1.2', letterSpacing: '0.05em' }}>{subText}</p>{subTextTh && <p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>{subTextTh}</p>}</>)}
-                        </div>
-                    </div>
-                    <div className="mt-auto pt-2 flex-shrink-0"><button onClick={() => btnClick(reset)} className="w-full bg-[var(--neon)] text-black font-sg-expanded-medium text-3xl py-4 rounded-xl shadow-[0_0_15px_rgba(200,255,0,0.3)] flex items-center justify-center space-x-3 btn-press"><div className="w-5 h-5 bg-black rounded-sm"></div><span className="tracking-widest">STOP</span></button></div>
-                </div>
-            );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
