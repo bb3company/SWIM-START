@@ -170,6 +170,8 @@
             const [isWaitingManual, setIsWaitingManual] = useState(false);
             const manualResolveRef = useRef(null);
 
+            const [manualType, setManualType] = useState('standard');
+
             const [reflexState, setReflexState] = useState('init'); 
             const [reflexTime, setReflexTime] = useState(0);
             const reflexTimerRef = useRef(null);
@@ -644,6 +646,12 @@
                         if (isStopwatchOn) { raceStartTime.current = Date.now(); setIsStopwatchRunning(true); setIsNewSession(true); }
                         await sleep(2000); if (cancelRef.current) return; if (isStopwatchOn) { setScreen('stopwatch'); return; }
                     } else if (selectedMode === 'ready' || selectedMode === 'manual') {
+                        if (selectedMode === 'manual' && manualType === 'announcer') {
+                            setStep(0); const evt = EVENTS.find(e => e.id === raceEvent); setStatusText('NOTICE'); setSubText('RACE EVENT'); setSubTextTh('ประกาศรายการแข่งขัน'); await speak(`รายการแข่งขัน ${evt.name}`, 'th-TH', 0.9); await sleep(500); checkCancel(); setSubText('LANES'); setSubTextTh('ประกาศช่องว่าย');
+                            let laneText = ""; for (let i = 1; i <= 5; i++) { const swimmer = lanes[i] ? lanes[i] : FALLBACK_NAMES[i]; laneText += `ช่องว่ายที่ ${i} นักกีฬา ${swimmer}, `; } await speak(laneText, 'th-TH', 0.95); await sleep(1000); checkCancel();
+                            await waitForNext();
+                        }
+
                         setStep(1); setStatusText('3 SHORT WHISTLES'); setSubText('GET READY'); setSubTextTh('เตรียมความพร้อม');
                         for (let i = 0; i < 3; i++) { checkCancel(); playWhistle(0.15); await sleep(400); } 
                         if (selectedMode === 'manual') await waitForNext(); else await sleep(Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000);
@@ -739,7 +747,7 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
@@ -889,11 +897,21 @@
             if (screen === 'setup') {
                 return (
                     <div className="h-dvh w-full max-w-md mx-auto flex flex-col p-5 bg-[#050505]">
-                        <div className="flex items-center mb-6 flex-shrink-0"><button onClick={() => btnClick(() => setScreen('menu'))} className="text-white btn-press mr-2 flex items-center justify-center"><IcoBack /></button><h2 className="text-neon font-sg-bold text-2xl uppercase mt-1">{selectedMode === 'ready' || selectedMode === 'manual' ? 'PRACTICE SETUP' : 'RACE SETUP'}</h2></div>
+                        <div className="flex items-center mb-6 flex-shrink-0"><button onClick={() => btnClick(() => setScreen('menu'))} className="text-white btn-press mr-2 flex items-center justify-center"><IcoBack /></button><h2 className="text-neon font-sg-bold text-2xl uppercase mt-1">{(selectedMode === 'ready' || selectedMode === 'manual') ? 'PRACTICE SETUP' : 'RACE SETUP'}</h2></div>
                         <div className="flex-1 overflow-y-auto hide-scroll">
+                            {selectedMode === 'manual' && (
+                                <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333] mb-4">
+                                    <h3 className="text-neon font-sg-bold mb-4 text-center text-lg uppercase tracking-wider">MANUAL TYPE</h3>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => btnClick(() => setManualType('standard'))} className={`flex-1 py-3 rounded-lg font-bold uppercase tracking-wider text-xs transition-colors border btn-press ${manualType === 'standard' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Standard</button>
+                                        <button onClick={() => btnClick(() => setManualType('announcer'))} className={`flex-1 py-3 rounded-lg font-bold uppercase tracking-wider text-xs transition-colors border btn-press ${manualType === 'announcer' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Announcer</button>
+                                    </div>
+                                </div>
+                            )}
+
                             {(selectedMode === 'ready' || selectedMode === 'manual') && (
-                                <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333]">
-                                    <h3 className="text-neon font-sg-bold mb-4 text-center text-lg">STYLE SETUP</h3>
+                                <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333] mb-4">
+                                    <h3 className="text-neon font-sg-bold mb-4 text-center text-lg uppercase tracking-wider">STYLE SETUP</h3>
                                     <div className="flex flex-col space-y-3">
                                         <button onClick={() => btnClick(() => setReadyStyle('freestyle'))} className={`py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors border btn-press ${readyStyle === 'freestyle' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Freestyle / Others</button>
                                         <button onClick={() => btnClick(() => setReadyStyle('backstroke'))} className={`py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors border btn-press ${readyStyle === 'backstroke' ? 'bg-[var(--neon)] text-black shadow-[0_0_15px_rgba(200,255,0,0.3)]' : 'bg-black border-[#333] text-gray-500'}`}>Backstroke</button>
@@ -901,8 +919,10 @@
                                     <p className="text-center text-xs text-gray-500 mt-4 font-mont-medium">*Includes 2nd long whistle for Backstroke</p>
                                 </div>
                             )}
-                            {selectedMode === 'race' && (
+
+                            {(selectedMode === 'race' || (selectedMode === 'manual' && manualType === 'announcer')) && (
                                 <div className="w-full bg-[#111] p-5 rounded-2xl border border-[#333] flex flex-col justify-center">
+                                    <h3 className="text-neon font-sg-bold mb-4 text-center text-lg uppercase tracking-wider">ANNOUNCER SETUP</h3>
                                     <div className="mb-6"><label className="text-[10px] text-neon font-sg-bold tracking-widest mb-2 block text-center uppercase">Race Event</label><select value={raceEvent} onChange={(e) => { btnClick(); setRaceEvent(e.target.value); }} className="w-full bg-black border border-[#333] text-white p-3 rounded-xl text-sm font-bold focus:outline-none focus:border-neon appearance-none text-center shadow-inner">{EVENTS.map(evt => <option key={evt.id} value={evt.id}>{evt.name}</option>)}</select></div>
                                     <div className="mb-2"><label className="text-[10px] text-gray-500 font-sg-bold tracking-widest mb-3 block text-center uppercase">Assign Swimmers (Tap to Add)</label>
                                         <div className="flex justify-between gap-2 px-1">{[1, 2, 3, 4, 5].map(num => (<button key={num} onClick={() => btnClick(() => setActiveLaneModal(num))} className={`flex-1 aspect-square rounded-xl flex items-center justify-center font-sg-bold text-2xl transition-all btn-press ${lanes[num] ? 'bg-neon text-black shadow-[0_0_15px_rgba(200,255,0,0.4)] border border-neon' : 'bg-[#1a1a1a] text-zinc-600 border border-[#333]'}`}>{num}</button>))}</div>
@@ -1026,10 +1046,10 @@
                             <div className="flex space-x-2 relative">{[1, 2, 3, 4].map(n => <div key={n} className={`w-3 h-3 rounded-full transition-all ${step >= n ? 'bg-[var(--neon)] shadow-[0_0_10px_var(--neon)]' : 'bg-[#333]'}`}></div>)}</div>
                             <button onClick={() => { triggerVibrate(); const newState = !isUiMuted; setIsUiMuted(newState); if (!newState) playClickSound(); }} className={`w-8 h-8 flex items-center justify-center btn-press ${isUiMuted ? 'text-[#666]' : 'text-[var(--neon)]'}`}>{isUiMuted ? <IcoSpeakerMuted /> : <IcoSpeaker />}</button>
                         </div>
-                        <div className="text-center mb-6 flex-shrink-0"><h2 className="text-neon font-sg-bold text-xl uppercase mt-1">{selectedMode === 'quick' ? 'QUICK START' : selectedMode === 'ready' ? 'GET READY' : selectedMode === 'manual' ? 'MANUAL MODE' : 'RACE MODE'}</h2><p className="text-white text-sm font-bold tracking-widest uppercase mt-1">STEP {step} OF 4</p></div>
+                        <div className="text-center mb-6 flex-shrink-0"><h2 className="text-neon font-sg-bold text-xl uppercase mt-1">{(selectedMode === 'quick') ? 'QUICK START' : (selectedMode === 'ready') ? 'GET READY' : (selectedMode === 'manual') ? 'MANUAL MODE' : 'RACE MODE'}</h2><p className="text-white text-sm font-bold tracking-widest uppercase mt-1">STEP {step} OF 4</p></div>
                         <div className="text-center mb-6 h-10 flex-shrink-0 flex items-center justify-center"><h3 className="text-white font-sg-bold text-3xl tracking-widest uppercase">{statusText}</h3></div>
                         <div className="flex-1 flex flex-col items-center justify-center relative mt-2 mb-6">
-                            {step === 0 && selectedMode === 'race' && (<IcoAnnounce />)}{step === 1 && (<IcoShortWhistles />)}{step === 2 && (<IcoLongWhistle />)}{step === 3 && (<IcoTakeMarks />)}{step === 4 && (<div className="relative flex items-center justify-center"><div className="absolute w-40 h-40 border border-[var(--neon)] rounded-full animate-ping opacity-20"></div><div className="absolute w-32 h-32 border-2 border-[var(--neon)] rounded-full animate-pulse opacity-50"></div><div className="w-24 h-24 rounded-full border-4 border-[var(--neon)] flex items-center justify-center shadow-[0_0_15px_rgba(200,255,0,0.6)] text-neon"><IcoSpeaker /></div></div>)}
+                            {step === 0 && (selectedMode === 'race' || selectedMode === 'manual') && (<IcoAnnounce />)}{step === 1 && (<IcoShortWhistles />)}{step === 2 && (<IcoLongWhistle />)}{step === 3 && (<IcoTakeMarks />)}{step === 4 && (<div className="relative flex items-center justify-center"><div className="absolute w-40 h-40 border border-[var(--neon)] rounded-full animate-ping opacity-20"></div><div className="absolute w-32 h-32 border-2 border-[var(--neon)] rounded-full animate-pulse opacity-50"></div><div className="w-24 h-24 rounded-full border-4 border-[var(--neon)] flex items-center justify-center shadow-[0_0_15px_rgba(200,255,0,0.6)] text-neon"><IcoSpeaker /></div></div>)}
                             <div className="min-h-[80px] mt-6 text-center flex flex-col items-center justify-start flex-shrink-0">
                                 {step === 4 ? (<><h1 className="text-neon font-sg-bold tracking-widest leading-none" style={{ fontSize: '64px', textShadow: '0 0 10px rgba(200,255,0,0.7)' }}>GO!</h1><p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>ไป</p></>) : (<><p className="text-neon font-sg-bold uppercase" style={{ fontSize: '32px', lineHeight: '1.2', letterSpacing: '0.05em' }}>{subText}</p>{subTextTh && <p className="text-white font-kanit-regular" style={{ fontSize: '18px', marginTop: '6px', letterSpacing: '0.02em' }}>{subTextTh}</p>}</>)}
                             </div>
@@ -1199,7 +1219,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.5</span>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.6</span>
                     </div>
 
                     {renderPopup()}
