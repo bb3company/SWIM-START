@@ -40,12 +40,15 @@
             scroll-behavior: smooth;
         }
         .swipe-container::-webkit-scrollbar { display: none; }
+        
         .swipe-page {
             flex: 0 0 100%;
             width: 100%;
+            max-width: 100vw;
             scroll-snap-align: start;
             scroll-snap-stop: always;
             overflow-y: auto;
+            overflow-x: hidden; /* 🌟 แก้ปัญหาหน้าขยับซ้ายขวา และสไลด์ 2 ครั้ง */
             padding-bottom: 60px;
         }
         
@@ -69,6 +72,7 @@
         .cover-content {
             position: relative;
             z-index: 2;
+            width: 100%; /* บังคับไม่ให้ล้นขอบจอ */
         }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -135,7 +139,7 @@
                                     </div>
                                     <h1 className="font-sg-bold text-white uppercase leading-[0.9] tracking-wider mb-2" style={{ fontSize: '42px' }}>SECRET</h1>
                                     <h1 className="font-sg-bold text-[var(--neon)] uppercase leading-[0.9] tracking-wider mb-6" style={{ fontSize: '42px' }}>TIPS</h1>
-                                    <p className="text-white font-kanit text-sm tracking-wide border-t border-b border-[#444] py-2 px-4 mb-10">
+                                    <p className="text-white font-kanit text-sm tracking-wide border-t border-b border-[#444] py-2 px-4 mb-10 mx-4">
                                         {t('เตรียมตัวให้พร้อมก่อนลงสระ สไตล์นักกีฬาโปร', 'Prepare like a pro before hitting the pool')}
                                     </p>
                                     <div className="flex flex-col items-center animate-bounce mt-10">
@@ -298,13 +302,14 @@
                             {/* ================= PAGE 5 (COVER 2: RACE PROCEDURE) ================= */}
                             <div className="swipe-page cover-page hide-scroll" style={{ backgroundImage: "url('cover-race.jpg')" }}>
                                 <div className="cover-overlay"></div>
-                                <div className="cover-content mt-10">
+                                <div className="cover-content mt-10 px-4">
                                     <div className="w-16 h-16 bg-[#3B82F6] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(59,130,246,0.4)]">
                                         <span className="material-symbols-outlined text-white" style={{fontSize: '36px'}}>pool</span>
                                     </div>
-                                    <h1 className="font-sg-bold text-white uppercase leading-[0.9] tracking-wider mb-2" style={{ fontSize: '38px' }}>RACE</h1>
-                                    <h1 className="font-sg-bold text-[#60A5FA] uppercase leading-[0.9] tracking-wider mb-6" style={{ fontSize: '38px' }}>PROCEDURE</h1>
-                                    <p className="text-[#93C5FD] font-kanit text-sm tracking-wide border-t border-b border-[#1E3A8A] py-2 px-4 mb-10">
+                                    {/* 🌟 ปรับขนาดฟอนต์ให้รองรับจอเล็กแบบพอดี ไม่ทะลุขอบแน่นอน */}
+                                    <h1 className="font-sg-bold text-white uppercase leading-[0.9] tracking-wider mb-2" style={{ fontSize: 'min(38px, 10vw)' }}>RACE</h1>
+                                    <h1 className="font-sg-bold text-[#60A5FA] uppercase leading-[0.9] tracking-wider mb-6" style={{ fontSize: 'min(36px, 9.5vw)' }}>PROCEDURE</h1>
+                                    <p className="text-[#93C5FD] font-kanit text-sm tracking-wide border-t border-b border-[#1E3A8A] py-2 px-2 mb-10">
                                         {t('ขั้นตอนการแข่งขัน และกติกาที่ต้องรู้', 'Master the start, avoid the DQ')}
                                     </p>
                                     <div className="flex flex-col items-center animate-bounce mt-10">
