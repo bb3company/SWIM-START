@@ -115,6 +115,18 @@
         ];
         const FALLBACK_NAMES = { 1: 'เอ', 2: 'บี', 3: 'ซี', 4: 'ดี', 5: 'อี' };
 
+        const MODE_DETAILS = {
+            quick: { en: "REACTION TIME FOCUS", th: "ฝึกปฏิกิริยาการออกตัว", descEn: "Single start signal for quick response training.", descTh: "เน้นการตอบสนองต่อเสียงสัญญาณอย่างรวดเร็ว" },
+            ready: { en: "STANDARD SEQUENCE", th: "ลำดับปล่อยตัวมาตรฐาน", descEn: "Complete sequence with short and long whistles.", descTh: "ฝึกซ้อมตามขั้นตอนสากล (สั้น 3 ยาว 1)" },
+            race: { en: "FULL COMPETITION", th: "จำลองการแข่งขันจริง", descEn: "Announces event, lanes, and full whistle sequence.", descTh: "มีเสียงประกาศรายการและลู่วิ่ง พร้อมขั้นตอนเต็ม" },
+            manual: { en: "COACH CONTROL", th: "โหมดผู้คุมฝึกซ้อม", descEn: "Step-by-step sequence control with manual 'Next'.", descTh: "ควบคุมสเตปเสียงนกหวีดทีละขั้นด้วยตัวคุณเอง" },
+            reflex: { en: "REFLEX TRAINING", th: "ทดสอบการตอบสนอง", descEn: "Challenge your body reflex. Don't foul the start!", descTh: "ฝึกประสาทสัมผัส ออกตัวให้เร็วที่สุดโดยไม่ฟาวล์" },
+            direct_stopwatch: { en: "MANUAL TIMING", th: "นาฬิกาจับเวลา", descEn: "High-precision stopwatch without start sequence.", descTh: "ใช้งานนาฬิกาจับเวลาโดยตรง ไม่ผ่านขั้นตอนปล่อยตัว" },
+            pre_match: { en: "PRE-MATCH TIPS", th: "เทคนิคเตรียมตัวแข่ง", descEn: "Pro advice for mental and physical preparation.", descTh: "คำแนะนำเพื่อเตรียมความพร้อมก่อนลงสนามจริง" },
+            check_list: { en: "GEAR CHECKLIST", th: "รายการอุปกรณ์ที่ต้องเตรียม", descEn: "Ensure you have all necessary gear for the meet.", descTh: "ตรวจสอบอุปกรณ์ว่ายน้ำให้ครบถ้วน ไม่ตกหล่น" },
+            user_profile: { en: "USER PROFILE", th: "ข้อมูลผู้ใช้งาน", descEn: "Manage your profile and check PRO membership status.", descTh: "จัดการข้อมูลส่วนตัวและตรวจสอบสถานะสมาชิก" }
+        };
+
         let audioCtx = null;
         const getAudioContext = () => {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -557,12 +569,12 @@
                         if (!isPro) setPopupType(user ? 'buy' : 'login');
                         else initReflexMode();
                     } else if (selectedMode === 'direct_stopwatch') {
-    setScreen('stopwatch');
-    checkAndClearLapHistory();
-    setFinalTime(0);
-    setIsNewSession(true);
-    setIsStopwatchRunning(false);
-} else if (selectedMode === 'pre_match') {
+                        setScreen('stopwatch');
+                        checkAndClearLapHistory();
+                        setFinalTime(0);
+                        setIsNewSession(true);
+                        setIsStopwatchRunning(false);
+                    } else if (selectedMode === 'pre_match') {
                         window.location.href = 'tips.html';
                     } else if (selectedMode === 'check_list') {
                         window.location.href = 'checklist.html';
@@ -675,7 +687,6 @@
                 setScreen('menu'); 
             };
 
-            // 🌟 3. ระบบจัดการ Swipe เปลี่ยนหน้า ถูกเซ็ตให้รองรับ touch-action: pan-y เพื่อให้ปัดลื่นไหลบนมือถือ
             const handleTouchStart = (e) => {
                 touchStartX.current = e.targetTouches[0].clientX;
                 touchEndX.current = e.targetTouches[0].clientX;
@@ -732,7 +743,6 @@
                 </svg>
             );
 
-            // 🌟 1. ดึงโค้ด CSS ของการ์ดกลับเป็นค่าดั้งเดิม 100% (ไม่มี min-h ที่ทำให้เละ)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
@@ -1046,7 +1056,6 @@
                 );
             }
 
-            // 🌟 6. Default Render: หน้า Menu หลัก (เพิ่ม touch-action: pan-y ให้สไลด์ง่ายขึ้น)
             return (
                 <div className="h-dvh w-full max-w-[450px] mx-auto flex flex-col px-5 pt-5 pb-8 bg-[#050505] relative">
                     
@@ -1107,12 +1116,23 @@
                         </div>
                     )}
 
-                    {/* ขยับกรอบโหมดขึ้นไปชิดกับ Hero Image ตามภาพตัวอย่าง */}
-                    <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#050505] mt-2 mb-3 min-h-[120px]">
-                        <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
+                    {/* Hero Image / Dynamic Mode Description */}
+                    <div className="w-full flex-1 relative rounded-lg overflow-hidden flex items-center justify-center bg-[#0a0a0a] border border-[#222] mt-2 mb-3 min-h-[120px]">
+                        {!selectedMode ? (
+                            <div className="absolute inset-0 w-full h-full animate-fade-in">
+                                <img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" />
+                            </div>
+                        ) : (
+                            <div className="p-4 text-center animate-fade-in flex flex-col items-center justify-center absolute inset-0 w-full h-full">
+                                <h3 className="text-[var(--neon)] font-sg-bold text-xl tracking-widest uppercase mb-1 leading-none">{MODE_DETAILS[selectedMode].en}</h3>
+                                <p className="text-white font-kanit-regular text-sm mb-3 leading-none">{MODE_DETAILS[selectedMode].th}</p>
+                                <div className="h-[1px] w-12 bg-[#333] mb-3"></div>
+                                <p className="text-[#aaa] font-mont-medium text-[10px] uppercase tracking-wider leading-tight">{MODE_DETAILS[selectedMode].descEn}</p>
+                                <p className="text-[#888] font-kanit-regular text-[10px] mt-1 leading-none">{MODE_DETAILS[selectedMode].descTh}</p>
+                            </div>
+                        )}
                     </div>
 
-                    {/* 🌟 พื้นที่สไลด์เต็มหน้าจอ พร้อม touchAction: pan-y เพื่อให้ปัดบนมือถือได้ลื่นไหล ไม่ติดปุ่ม */}
                     <div 
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
@@ -1126,7 +1146,6 @@
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-60"></div>
                         </div>
 
-                        {/* 🌟 ปรับข้อความ (desc) ให้เป็น 3 บรรทัดเป๊ะๆ ทุกปุ่ม เพื่อให้ Flexbox ดึงความสูงเท่ากันเอง */}
                         <div className="flex justify-between w-full gap-2 flex-shrink-0">
                             {currentPage === 0 && (
                                 <>
@@ -1151,7 +1170,6 @@
                             )}
                         </div>
 
-                        {/* 🌟 จุด Pagination ตรงตามภาพ (ขีดเขียว และจุดวงกลมเทา) */}
                         <div className="flex justify-center items-center space-x-1.5 mt-3 mb-4">
                             {[0, 1, 2].map(idx => (
                                 <div 
@@ -1181,7 +1199,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.3</span>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.4</span>
                     </div>
 
                     {renderPopup()}
