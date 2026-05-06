@@ -139,7 +139,6 @@
             const [screen, setScreen] = useState('menu');
             const [selectedMode, setSelectedMode] = useState(null); 
             
-            // States สำหรับหน้าโหมดต่างๆ
             const [currentPage, setCurrentPage] = useState(0); 
             const modeTitles = ["DIVE MODE", "TRAINING MODE", "PREP MODE"];
             const touchStartX = useRef(null);
@@ -156,11 +155,9 @@
             
             const [isCooldown, setIsCooldown] = useState(false);
 
-            // States สำหรับโหมด Manual
             const [isWaitingManual, setIsWaitingManual] = useState(false);
             const manualResolveRef = useRef(null);
 
-            // States สำหรับโหมด Reflex Body
             const [reflexState, setReflexState] = useState('init'); 
             const [reflexTime, setReflexTime] = useState(0);
             const reflexTimerRef = useRef(null);
@@ -732,11 +729,11 @@
 
             const IcoLine = () => (
                 <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="currentColor">
-                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
+                    <path d="M12 3C5.9 3 1 7.2 1 12.4c0 2.6 1.3 5 3.6 6.6.3.1.6.4.7.7l-.3 2.1c0 .2.2.4.4.3 1.2-.5 4.3-2.6 5.8-3.9H12c6.1 0 11-4.2 11-9.4S18.1 3 12 3zm-4.7 11.2H4.8c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4h2.1c.3 0 .5.2.5.5s-.3.5-.6.5zm2.7 0H8.9c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5s.5.2.5.5v4.5c.1.2-.2.5-.5.5zm2.9 0h-.6c-.1 0-.3-.1-.4-.2l-2-2.3v2.1c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5.1 0 .3.1.4.2l2 2.3v-2.1c0-.3.2-.5.5-.5s.5.2.5.5v4.5c0 .2-.2.5-.5.5zm4.5 0h-2.6c-.3 0-.5-.2-.5-.5v-4.5c0-.3.2-.5.5-.5h2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1v1.1h2.1c.3 0 .5.2.5.5s-.2.5-.5.5z"/>
                 </svg>
             );
 
-            // 🌟 1. ดึงโค้ด ModeCard กลับมาเป็นแบบ Original 100% (ไม่มีการบังคับความสูง)
+            // 🌟 1. ใช้ min-h-[145px] เพื่อบังคับความสูงขั้นต่ำให้เท่ากับหน้าแรกสุด (ป้องกันข้อความล้น)
             const ModeCard = ({ id, icon: Icon, title1, title2, desc, isProOnly }) => {
                 const isActive = selectedMode === id;
                 const showProBadge = isProOnly && !isPro; 
@@ -747,11 +744,11 @@
                 };
 
                 return (
-                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative ${isActive ? 'active' : ''}`}>
+                    <div onClick={handleCardClick} className={`mode-card flex-1 flex flex-col items-center justify-start pt-4 pb-2 px-1 btn-press cursor-pointer relative min-h-[145px] ${isActive ? 'active' : ''}`}>
                         {showProBadge && <div className="absolute top-1.5 right-1.5 text-[#888] bg-[#111] font-mont-bold text-[9px] border border-[#444] px-1 rounded-sm">PRO</div>}
                         <div className="h-12 flex items-center justify-center mb-1 flex-shrink-0"><Icon active={isActive} size="32px" className={showProBadge && !isActive ? 'text-[#888]' : ''} /></div>
                         <div className={`font-sg-regular text-center flex flex-col uppercase leading-[1.1] flex-shrink-0 ${isActive ? 'text-neon' : showProBadge ? 'text-[#888]' : 'text-white'}`} style={{ fontSize: '16px' }}><span>{title1}</span><span>{title2}</span></div>
-                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
+                        <div className={`font-mont-medium text-center mt-2 px-1 leading-tight flex-shrink-0 w-full ${isActive ? 'text-neon' : 'text-[#555]'}`} style={{ fontSize: '11px', wordWrap: 'break-word' }}>{desc.split('\\n').map((line, i) => <div key={i}>{line}</div>)}</div>
                     </div>
                 );
             };
@@ -1114,19 +1111,20 @@
                         <div className="absolute inset-0 w-full h-full animate-fade-in"><img src="hero.jpg" alt="Swimmer" className="w-full h-full object-cover object-center" /></div>
                     </div>
 
+                    {/* 🌟 พื้นที่สไลด์เต็มหน้าจอ ครอบคลุมทั้งหมด */}
                     <div 
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
                         className="w-full flex flex-col flex-shrink-0"
                     >
-                        <div className="flex items-center w-full mb-3 space-x-4 flex-shrink-0">
+                        <div className="flex items-center w-full mb-4 space-x-4">
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
-                            <span className="text-[var(--neon)] font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
+                            <span className="text-neon font-sg-regular uppercase" style={{ fontSize: '16px' }}>{modeTitles[currentPage]}</span>
                             <div className="h-[2px] flex-1 bg-[var(--neon)] opacity-80"></div>
                         </div>
 
-                        <div className="flex justify-between w-full gap-2 mb-5 flex-shrink-0">
+                        <div className="flex justify-between w-full gap-2">
                             {currentPage === 0 && (
                                 <>
                                     <ModeCard id="quick" icon={IcoQuick} title1="QUICK" title2="START" desc="Reaction time\nfocus." isProOnly={false} />
@@ -1150,7 +1148,7 @@
                             )}
                         </div>
 
-                        <div className="flex justify-center items-center space-x-1.5 mt-[-5px] mb-4">
+                        <div className="flex justify-center items-center space-x-1.5 mt-5 mb-5">
                             {[0, 1, 2].map(idx => (
                                 <div 
                                     key={idx} 
@@ -1179,7 +1177,7 @@
                                 <span>Update System</span>
                             </button>
                         </div>
-                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.1</span>
+                        <span className="font-mont-bold text-[#666] uppercase" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>VER.1.1.2</span>
                     </div>
 
                     {renderPopup()}
